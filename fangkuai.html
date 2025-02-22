@@ -112,7 +112,7 @@
 
         #main-btn {
             background: #2ECC71;
-            min-width: 18vw;
+            min-width: 25vw;
         }
 
         #reset-btn {
@@ -157,21 +157,17 @@
         }
 
         @media (max-width: 768px) {
-            .main-container {
-                padding: 10px;
-            }
             .game-container {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto auto auto;
             }
             #game-board {
                 order: 1;
-                max-height: 50vh;
+                max-height: 60vh;
             }
             .side-panel {
                 flex-direction: row;
                 order: 2;
-                margin-top: 10px;
             }
             .control-panel {
                 order: 3;
@@ -240,7 +236,7 @@
         ];
 
         // 游戏状态
-        let gameState = 'stopped';
+        let gameState = 'stopped'; // stopped / running / paused
         let BLOCK_SIZE, PREVIEW_SIZE;
         let highScore = localStorage.getItem('tetrisHighScore') || 0;
         let lastTime = 0;
@@ -280,12 +276,7 @@
             merge() {
                 this.current.shape.forEach((row, y) => {
                     row.forEach((value, x) => {
-                        if (value) {
-                            const boardY = y + this.current.y;
-                            if (boardY >= 0) {
-                                this.board[boardY][x + this.current.x] = value;
-                            }
-                        }
+                        if (value) this.board[y + this.current.y][x + this.current.x] = value;
                     });
                 });
             }
@@ -342,7 +333,6 @@
             tetris.next = tetris.createPiece();
             scoreElement.textContent = 0;
             levelElement.textContent = 1;
-            lastTime = performance.now();
         }
 
         function calculateSizes() {
@@ -415,6 +405,7 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // 绘制预览位置（统一60%透明度）
             if (tetris.current && gameState === 'running') {
                 const previewY = calculateDropPosition();
                 tetris.current.shape.forEach((row, y) => {
@@ -432,12 +423,14 @@
                 });
             }
 
+            // 绘制当前棋盘
             tetris.board.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value) drawBlock(x, y, COLORS[value]);
                 });
             });
 
+            // 绘制当前方块
             if (tetris.current) {
                 tetris.current.shape.forEach((row, y) => {
                     row.forEach((value, x) => {
@@ -459,10 +452,7 @@
         }
 
         function update(time = 0) {
-            if (gameState !== 'running') {
-                requestAnimationFrame(update);
-                return;
-            }
+            if (gameState !== 'running') return;
 
             const deltaTime = time - lastTime;
             lastTime = time;
@@ -547,13 +537,12 @@
             draw();
         }
 
-        function startContinuousMove(direction){
-        if (movelnterval) return ; 
-        handleControl (direction); 
-        movelnterval = setInterval (()=> handleControl (direction),100);
-        }
-        
-            function stopContinuousMove() {
+        function startContinuousMove(direction) {
+            if (moveInterval) return;
+            handleControl(direction);
+            moveInterval = setInterval(() => handleControl(direction),100);
+            }
+                function stopContinuousMove() {
         clearInterval(moveInterval);
         moveInterval = null;
     }
@@ -563,6 +552,7 @@
         mainBtn.style.backgroundColor = gameState === 'running' ? '#3498DB' : '#2ECC71';
     }
 
+    // 事件监听
     mainBtn.addEventListener('click', () => {
         if (gameState === 'stopped') {
             initGame();
@@ -572,6 +562,7 @@
         } else {
             gameState = 'running';
         }
+        lastTime = performance.now();
         updateMainButton();
         requestAnimationFrame(update);
     });
@@ -599,6 +590,7 @@
         draw();
     });
 
+    // 初始化
     highScoreElement.textContent = highScore;
     initCanvas();
     initGame();
