@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>终极俄罗斯方块</title>
+    <title>全平台俄罗斯方块</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Helvetica Neue', sans-serif;
+            font-family: 'Roboto', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -19,109 +20,140 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 2vh 3vw;
+            touch-action: none;
         }
 
-        .game-wrapper {
-            display: flex;
+        .game-container {
             width: 100%;
-            max-width: 400px;
-            margin-top: 20px;
-        }
-
-        .side-panel {
-            flex: 1;
-            padding: 10px;
-            min-width: 80px;
-        }
-
-        .left-panel {
-            text-align: right;
-        }
-
-        .right-panel {
-            text-align: left;
+            max-width: 95vw;
+            display: grid;
+            grid-template-columns: 25% 50% 25%;
+            gap: 2vw;
+            margin-top: 2vh;
         }
 
         #game-board {
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            margin: 0 10px;
-            position: relative;
+            border-radius: 2vw;
+            box-shadow: 0 1vh 2vw rgba(0, 0, 0, 0.3);
+            width: 100%;
+            aspect-ratio: 0.5;
         }
 
-        .control-panel {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 400px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            padding: 10px;
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2vw;
         }
 
         .game-info {
             background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            padding: 2vh 3vw;
+            border-radius: 1.5vw;
+            margin-bottom: 1.5vh;
+            text-align: center;
+            font-size: clamp(12px, 2vh, 16px);
+        }
+
+        .score {
+            font-size: clamp(16px, 3.5vh, 24px);
+            color: #2ECC71;
+            font-weight: bold;
+            margin: 1vh 0;
+        }
+
+        .high-score {
+            color: #FFA500;
+            font-size: clamp(14px, 2.5vh, 18px);
+        }
+
+        .level {
+            color: #F1C40F;
+            font-size: clamp(14px, 2.5vh, 18px);
+        }
+
+        .control-panel {
+            width: 100%;
+            max-width: 95vw;
+            margin: 2vh auto 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3vw;
+            padding: 2vw;
         }
 
         button {
             background: #3498DB;
             border: none;
-            padding: 15px;
+            padding: 1.5vh;
             color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 24px;
+            border-radius: 1.5vw;
+            font-size: clamp(20px, 4vh, 28px);
             touch-action: manipulation;
-            user-select: none;
+            min-width: 18vw;
+            min-height: 8vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: filter 0.2s;
+            cursor: pointer;
         }
 
-        button:hover {
-            background: #2980B9;
+        button:active {
+            filter: brightness(0.8);
         }
 
         .fast-drop {
             background: #E74C3C !important;
         }
 
-        .score {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2ECC71;
-        }
-
-        .level {
-            font-size: 20px;
-            color: #F1C40F;
-        }
-
-        .high-score {
-            color: #FFA500;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
         .next-block {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
+            border-radius: 2vw;
+            padding: 2vw;
+            margin-top: 2vh;
+            aspect-ratio: 1;
+            position: relative;
+            overflow: hidden;
         }
 
-        .preview-block {
-            position: absolute;
-            opacity: 0.3;
+        @media (hover: hover) {
+            button:hover {
+                filter: brightness(1.1);
+            }
+            .control-panel {
+                max-width: 500px;
+                gap: 20px;
+            }
+            .game-container {
+                max-width: 800px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            #game-board {
+                order: 1;
+                max-height: 60vh;
+            }
+            .side-panel {
+                flex-direction: row;
+                order: 2;
+            }
+            .control-panel {
+                order: 3;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="game-wrapper">
-        <div class="side-panel left-panel">
+    <div class="game-container">
+        <div class="side-panel">
             <div class="game-info">
                 <div>最高分</div>
                 <div class="high-score" id="high-score">0</div>
@@ -138,7 +170,7 @@
 
         <canvas id="game-board"></canvas>
 
-        <div class="side-panel right-panel">
+        <div class="side-panel">
             <button id="start-btn">▶</button>
             <button id="pause-btn">⏸</button>
             <button id="reset-btn">↺</button>
@@ -149,12 +181,10 @@
     </div>
 
     <div class="control-panel">
-        <button ontouchstart="startContinuousMove('left')" ontouchend="stopContinuousMove()" 
-                onmousedown="startContinuousMove('left')" onmouseup="stopContinuousMove()">←</button>
+        <button ontouchstart="startContinuousMove('left')" ontouchend="stopContinuousMove()">←</button>
         <button onclick="handleControl('rotate')">↻</button>
         <button class="fast-drop" onclick="handleControl('drop')">↓</button>
-        <button ontouchstart="startContinuousMove('right')" ontouchend="stopContinuousMove()" 
-                onmousedown="startContinuousMove('right')" onmouseup="stopContinuousMove()">→</button>
+        <button ontouchstart="startContinuousMove('right')" ontouchend="stopContinuousMove()">→</button>
     </div>
 
     <script>
@@ -167,7 +197,6 @@
         const highScoreElement = document.getElementById('high-score');
         
         // 游戏配置
-        const BLOCK_SIZE = 30;
         const BOARD_WIDTH = 10;
         const BOARD_HEIGHT = 20;
         const COLORS = [
@@ -181,15 +210,32 @@
             '#E67E22'  // T
         ];
 
-        // 初始化画布
+        // 动态尺寸计算
+        let BLOCK_SIZE, PREVIEW_SIZE;
+
+        function calculateSizes() {
+            const gameBoardRect = canvas.getBoundingClientRect();
+            BLOCK_SIZE = Math.min(gameBoardRect.width / BOARD_WIDTH, gameBoardRect.height / BOARD_HEIGHT);
+            
+            const previewRect = nextCanvas.parentElement.getBoundingClientRect();
+            PREVIEW_SIZE = Math.min(previewRect.width, previewRect.height) * 0.8;
+        }
+
         function initCanvas() {
+            calculateSizes();
             const dpr = window.devicePixelRatio || 1;
+            
+            // 主游戏区域
             canvas.width = BLOCK_SIZE * BOARD_WIDTH * dpr;
             canvas.height = BLOCK_SIZE * BOARD_HEIGHT * dpr;
-            nextCanvas.width = BLOCK_SIZE * 4 * dpr;
-            nextCanvas.height = BLOCK_SIZE * 4 * dpr;
             ctx.scale(dpr, dpr);
+            ctx.translate(0.5, 0.5);
+            
+            // 预览区域
+            nextCanvas.width = PREVIEW_SIZE * dpr;
+            nextCanvas.height = PREVIEW_SIZE * dpr;
             nextCtx.scale(dpr, dpr);
+            nextCtx.translate(0.5, 0.5);
         }
 
         // 最高分系统
@@ -290,7 +336,6 @@
             }
         }
 
-        // 游戏状态控制
         const tetris = new Tetris();
         let lastTime = 0;
         let dropCounter = 0;
@@ -337,9 +382,40 @@
             }
         }
 
+        function drawNextPiece() {
+            nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+            if (!tetris.next) return;
+
+            const pieceWidth = tetris.next.shape[0].length;
+            const pieceHeight = tetris.next.shape.length;
+            const maxSize = Math.max(pieceWidth, pieceHeight);
+            const scale = (PREVIEW_SIZE / (maxSize * BLOCK_SIZE)) * 0.8;
+            
+            const offsetX = (PREVIEW_SIZE - pieceWidth * BLOCK_SIZE * scale) / 2;
+            const offsetY = (PREVIEW_SIZE - pieceHeight * BLOCK_SIZE * scale) / 2;
+
+            nextCtx.save();
+            nextCtx.translate(offsetX, offsetY);
+            nextCtx.scale(scale, scale);
+
+            tetris.next.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        nextCtx.fillStyle = tetris.next.color;
+                        nextCtx.fillRect(
+                            x * BLOCK_SIZE,
+                            y * BLOCK_SIZE,
+                            BLOCK_SIZE - 1,
+                            BLOCK_SIZE - 1
+                        );
+                    }
+                });
+            });
+            nextCtx.restore();
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
 
             // 绘制预览位置
             if (tetris.current && gameRunning) {
@@ -377,27 +453,13 @@
                 });
             }
 
-            // 绘制下一个方块
-            tetris.next.shape.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value) {
-                        const offsetX = Math.floor((4 - tetris.next.shape[0].length) / 2);
-                        nextCtx.fillStyle = tetris.next.color;
-                        nextCtx.fillRect(
-                            (x + offsetX) * BLOCK_SIZE,
-                            y * BLOCK_SIZE,
-                            BLOCK_SIZE - 1,
-                            BLOCK_SIZE - 1
-                        );
-                    }
-                });
-            });
+            drawNextPiece();
 
             if (tetris.gameOver) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = 'white';
-                ctx.font = '24px Arial';
+                ctx.font = `${BLOCK_SIZE * 1.2}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.fillText('游戏结束', canvas.width / 2, canvas.height / 2);
             }
@@ -417,7 +479,6 @@
                     tetris.merge();
                     tetris.sweep();
                     
-                    // 更新最高分
                     if (tetris.score > highScore) {
                         highScore = tetris.score;
                         localStorage.setItem('tetrisHighScore', highScore);
@@ -442,7 +503,6 @@
             requestAnimationFrame(update);
         }
 
-        // 控制处理
         function handleControl(action) {
             if (!gameRunning || tetris.gameOver) return;
             
@@ -492,78 +552,78 @@
             const rotated = tetris.current.shape;
             tetris.current.rotate();
             if (tetris.collide()) tetris.current.shape = rotated;
+            }
+                function dropPiece() {
+        if (!gameRunning || tetris.gameOver) return;
+        
+        let lines = 0;
+        while (true) {
+            tetris.current.y++;
+            if (tetris.collide()) {
+                tetris.current.y--;
+                tetris.merge();
+                tetris.sweep();
+                tetris.current = tetris.next;
+                tetris.next = tetris.createPiece();
+                tetris.score += lines * 2;
+                break;
+            }
+            lines++;
         }
+        dropCounter = 0;
+        draw();
+    }
 
-        function dropPiece() {
-            if (!gameRunning || tetris.gameOver) return;
-            
-            let lines = 0;
-            while (true) {
-                tetris.current.y++;
-                if (tetris.collide()) {
-                    tetris.current.y--;
-                    tetris.merge();
-                    tetris.sweep();
-                    tetris.current = tetris.next;
-                    tetris.next = tetris.createPiece();
-                    tetris.score += lines * 2;
-                    break;
-                }
-                lines++;
-            }
-            dropCounter = 0;
-            draw();
+    document.addEventListener('keydown', (event) => {
+        if (!gameRunning || tetris.gameOver) return;
+
+        switch(event.key) {
+            case 'ArrowLeft':
+                handleControl('left');
+                break;
+            case 'ArrowRight':
+                handleControl('right');
+                break;
+            case 'ArrowUp':
+                handleControl('rotate');
+                break;
+            case 'ArrowDown':
+            case ' ':
+                handleControl('drop');
+                break;
         }
+    });
 
-        // 键盘控制
-        document.addEventListener('keydown', (event) => {
-            if (!gameRunning || tetris.gameOver) return;
-
-            switch(event.key) {
-                case 'ArrowLeft':
-                    handleControl('left');
-                    break;
-                case 'ArrowRight':
-                    handleControl('right');
-                    break;
-                case 'ArrowUp':
-                    handleControl('rotate');
-                    break;
-                case 'ArrowDown':
-                case ' ':
-                    handleControl('drop');
-                    break;
-            }
-        });
-
-        // 按钮事件
-        document.getElementById('start-btn').addEventListener('click', () => {
-            if (!gameRunning) {
-                initGame();
-                gameRunning = true;
-                isPaused = false;
-                lastTime = 0;
-                requestAnimationFrame(update);
-            }
-        });
-
-        document.getElementById('pause-btn').addEventListener('click', () => {
-            isPaused = !isPaused;
-            document.getElementById('pause-btn').textContent = isPaused ? '▶' : '⏸';
-        });
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            gameRunning = false;
-            isPaused = false;
+    document.getElementById('start-btn').addEventListener('click', () => {
+        if (!gameRunning) {
             initGame();
-            draw();
-        });
+            gameRunning = true;
+            isPaused = false;
+            lastTime = 0;
+            requestAnimationFrame(update);
+        }
+    });
 
-        // 初始化
-        initCanvas();
-        window.addEventListener('resize', initCanvas);
+    document.getElementById('pause-btn').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('pause-btn').textContent = isPaused ? '▶' : '⏸';
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        gameRunning = false;
+        isPaused = false;
         initGame();
         draw();
-    </script>
+    });
+
+    window.addEventListener('resize', () => {
+        calculateSizes();
+        initCanvas();
+        draw();
+    });
+    initCanvas();
+    initGame();
+    draw();
+</script>
 </body>
 </html>
