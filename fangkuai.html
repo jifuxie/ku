@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>终极俄罗斯方块</title>
+    <title>安卓俄罗斯方块</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Helvetica Neue', sans-serif;
+            font-family: 'Roboto', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -19,109 +20,119 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 2vh 3vw;
+            touch-action: none;
         }
 
-        .game-wrapper {
-            display: flex;
+        .game-container {
             width: 100%;
-            max-width: 400px;
-            margin-top: 20px;
-        }
-
-        .side-panel {
-            flex: 1;
-            padding: 10px;
-            min-width: 80px;
-        }
-
-        .left-panel {
-            text-align: right;
-        }
-
-        .right-panel {
-            text-align: left;
+            max-width: 95vw;
+            display: grid;
+            grid-template-columns: 25% 50% 25%;
+            gap: 2vw;
+            margin-top: 2vh;
         }
 
         #game-board {
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            margin: 0 10px;
-            position: relative;
+            border-radius: 2vw;
+            box-shadow: 0 1vh 2vw rgba(0, 0, 0, 0.3);
+            width: 100%;
+            aspect-ratio: 0.5;
         }
 
-        .control-panel {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 400px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            padding: 10px;
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2vw;
         }
 
         .game-info {
             background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            padding: 2vh 3vw;
+            border-radius: 1.5vw;
+            margin-bottom: 1.5vh;
+            text-align: center;
+            font-size: 2vh;
+        }
+
+        .score {
+            font-size: 3.5vh;
+            color: #2ECC71;
+            font-weight: bold;
+            margin: 1vh 0;
+        }
+
+        .high-score {
+            color: #FFA500;
+            font-size: 2.5vh;
+            margin: 1vh 0;
+        }
+
+        .level {
+            color: #F1C40F;
+            font-size: 2.5vh;
+            margin: 1vh 0;
+        }
+
+        .control-panel {
+            width: 100%;
+            max-width: 95vw;
+            margin: 2vh auto 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3vw;
+            padding: 2vw;
         }
 
         button {
             background: #3498DB;
             border: none;
-            padding: 15px;
+            padding: 1.5vh;
             color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 24px;
+            border-radius: 1.5vw;
+            font-size: 4vh;
             touch-action: manipulation;
-            user-select: none;
+            min-width: 18vw;
+            min-height: 8vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: filter 0.2s;
         }
 
-        button:hover {
-            background: #2980B9;
+        button:active {
+            filter: brightness(0.8);
         }
 
         .fast-drop {
             background: #E74C3C !important;
         }
 
-        .score {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2ECC71;
-        }
-
-        .level {
-            font-size: 20px;
-            color: #F1C40F;
-        }
-
-        .high-score {
-            color: #FFA500;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
         .next-block {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
+            border-radius: 2vw;
+            padding: 2vw;
+            margin-top: 2vh;
+            aspect-ratio: 1;
         }
 
-        .preview-block {
-            position: absolute;
-            opacity: 0.3;
+        @media (max-height: 680px) {
+            button {
+                font-size: 3.5vh;
+                padding: 1.2vh;
+                min-height: 7vh;
+            }
+            .game-info {
+                padding: 1.5vh 2vw;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="game-wrapper">
-        <div class="side-panel left-panel">
+    <div class="game-container">
+        <div class="side-panel">
             <div class="game-info">
                 <div>最高分</div>
                 <div class="high-score" id="high-score">0</div>
@@ -138,7 +149,7 @@
 
         <canvas id="game-board"></canvas>
 
-        <div class="side-panel right-panel">
+        <div class="side-panel">
             <button id="start-btn">▶</button>
             <button id="pause-btn">⏸</button>
             <button id="reset-btn">↺</button>
@@ -149,12 +160,10 @@
     </div>
 
     <div class="control-panel">
-        <button ontouchstart="startContinuousMove('left')" ontouchend="stopContinuousMove()" 
-                onmousedown="startContinuousMove('left')" onmouseup="stopContinuousMove()">←</button>
+        <button ontouchstart="startContinuousMove('left')" ontouchend="stopContinuousMove()">←</button>
         <button onclick="handleControl('rotate')">↻</button>
         <button class="fast-drop" onclick="handleControl('drop')">↓</button>
-        <button ontouchstart="startContinuousMove('right')" ontouchend="stopContinuousMove()" 
-                onmousedown="startContinuousMove('right')" onmouseup="stopContinuousMove()">→</button>
+        <button ontouchstart="startContinuousMove('right')" ontouchend="stopContinuousMove()">→</button>
     </div>
 
     <script>
@@ -167,7 +176,6 @@
         const highScoreElement = document.getElementById('high-score');
         
         // 游戏配置
-        const BLOCK_SIZE = 30;
         const BOARD_WIDTH = 10;
         const BOARD_HEIGHT = 20;
         const COLORS = [
@@ -181,15 +189,23 @@
             '#E67E22'  // T
         ];
 
+        // 动态计算方块大小
+        let BLOCK_SIZE = Math.min(canvas.offsetWidth / BOARD_WIDTH, canvas.offsetHeight / BOARD_HEIGHT);
+
         // 初始化画布
         function initCanvas() {
             const dpr = window.devicePixelRatio || 1;
+            BLOCK_SIZE = Math.min(canvas.offsetWidth / BOARD_WIDTH, canvas.offsetHeight / BOARD_HEIGHT);
+            
             canvas.width = BLOCK_SIZE * BOARD_WIDTH * dpr;
             canvas.height = BLOCK_SIZE * BOARD_HEIGHT * dpr;
             nextCanvas.width = BLOCK_SIZE * 4 * dpr;
             nextCanvas.height = BLOCK_SIZE * 4 * dpr;
+            
             ctx.scale(dpr, dpr);
             nextCtx.scale(dpr, dpr);
+            ctx.translate(0.5, 0.5);
+            nextCtx.translate(0.5, 0.5);
         }
 
         // 最高分系统
@@ -397,7 +413,7 @@
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = 'white';
-                ctx.font = '24px Arial';
+                ctx.font = `${BLOCK_SIZE * 1.2}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.fillText('游戏结束', canvas.width / 2, canvas.height / 2);
             }
@@ -544,26 +560,28 @@
                 isPaused = false;
                 lastTime = 0;
                 requestAnimationFrame(update);
-            }
-        });
+                }
+                });
+                    document.getElementById('pause-btn').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('pause-btn').textContent = isPaused ? '▶' : '⏸';
+    });
 
-        document.getElementById('pause-btn').addEventListener('click', () => {
-            isPaused = !isPaused;
-            document.getElementById('pause-btn').textContent = isPaused ? '▶' : '⏸';
-        });
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            gameRunning = false;
-            isPaused = false;
-            initGame();
-            draw();
-        });
-
-        // 初始化
-        initCanvas();
-        window.addEventListener('resize', initCanvas);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        gameRunning = false;
+        isPaused = false;
         initGame();
         draw();
-    </script>
+    });
+
+    // 初始化
+    window.addEventListener('resize', () => {
+        initCanvas();
+        draw();
+    });
+    initCanvas();
+    initGame();
+    draw();
+</script>
 </body>
 </html>
