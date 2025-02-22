@@ -71,14 +71,12 @@
         button {
             background: #3498DB;
             border: none;
-            padding: 12px;
+            padding: 15px;
             color: white;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 24px;
             touch-action: manipulation;
             user-select: none;
         }
@@ -102,6 +100,12 @@
             color: #F1C40F;
         }
 
+        .high-score {
+            color: #FFA500;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
         .next-block {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
@@ -119,6 +123,10 @@
     <div class="game-wrapper">
         <div class="side-panel left-panel">
             <div class="game-info">
+                <div>最高分</div>
+                <div class="high-score" id="high-score">0</div>
+            </div>
+            <div class="game-info">
                 <div>得分</div>
                 <div class="score" id="score">0</div>
             </div>
@@ -131,9 +139,9 @@
         <canvas id="game-board"></canvas>
 
         <div class="side-panel right-panel">
-            <button id="start-btn" style="margin-bottom: 10px;">开始</button>
-            <button id="pause-btn" style="margin-bottom: 10px;">暂停</button>
-            <button id="reset-btn">重置</button>
+            <button id="start-btn">▶</button>
+            <button id="pause-btn">⏸</button>
+            <button id="reset-btn">↺</button>
             <div class="next-block">
                 <canvas id="next-block"></canvas>
             </div>
@@ -142,11 +150,11 @@
 
     <div class="control-panel">
         <button ontouchstart="startContinuousMove('left')" ontouchend="stopContinuousMove()" 
-                onmousedown="startContinuousMove('left')" onmouseup="stopContinuousMove()">← 左</button>
-        <button onclick="handleControl('rotate')">↻ 旋转</button>
+                onmousedown="startContinuousMove('left')" onmouseup="stopContinuousMove()">←</button>
+        <button onclick="handleControl('rotate')">↻</button>
+        <button class="fast-drop" onclick="handleControl('drop')">↓</button>
         <button ontouchstart="startContinuousMove('right')" ontouchend="stopContinuousMove()" 
-                onmousedown="startContinuousMove('right')" onmouseup="stopContinuousMove()">右 →</button>
-        <button class="fast-drop" onclick="handleControl('drop')">↓ 加速</button>
+                onmousedown="startContinuousMove('right')" onmouseup="stopContinuousMove()">→</button>
     </div>
 
     <script>
@@ -156,6 +164,7 @@
         const nextCtx = nextCanvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const levelElement = document.getElementById('level');
+        const highScoreElement = document.getElementById('high-score');
         
         // 游戏配置
         const BLOCK_SIZE = 30;
@@ -182,6 +191,10 @@
             ctx.scale(dpr, dpr);
             nextCtx.scale(dpr, dpr);
         }
+
+        // 最高分系统
+        let highScore = localStorage.getItem('tetrisHighScore') || 0;
+        highScoreElement.textContent = highScore;
 
         class Tetris {
             constructor() {
@@ -404,6 +417,13 @@
                     tetris.merge();
                     tetris.sweep();
                     
+                    // 更新最高分
+                    if (tetris.score > highScore) {
+                        highScore = tetris.score;
+                        localStorage.setItem('tetrisHighScore', highScore);
+                        highScoreElement.textContent = highScore;
+                    }
+
                     tetris.current = tetris.next;
                     tetris.next = tetris.createPiece();
                     
@@ -510,8 +530,6 @@
                     handleControl('rotate');
                     break;
                 case 'ArrowDown':
-                    handleControl('drop');
-                    break;
                 case ' ':
                     handleControl('drop');
                     break;
@@ -531,7 +549,7 @@
 
         document.getElementById('pause-btn').addEventListener('click', () => {
             isPaused = !isPaused;
-            document.getElementById('pause-btn').textContent = isPaused ? '继续' : '暂停';
+            document.getElementById('pause-btn').textContent = isPaused ? '▶' : '⏸';
         });
 
         document.getElementById('reset-btn').addEventListener('click', () => {
