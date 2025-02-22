@@ -86,35 +86,41 @@
             width: 100%;
             max-width: 500px;
             margin: 2vh auto 0;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 3vw;
+            display: flex;
+            justify-content: center;
+            gap: 2vw;
             padding: 2vw;
         }
 
         button {
             background: #3498DB;
             border: none;
-            padding: 1.5vh;
+            padding: 2vh;
             color: white;
-            border-radius: 1.5vw;
-            font-size: clamp(20px, 4vh, 28px);
-            touch-action: manipulation;
+            border-radius: 2vw;
+            font-size: clamp(24px, 5vw, 32px);
             min-width: 18vw;
-            min-height: 8vh;
+            min-height: 10vh;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: filter 0.2s;
             cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        button:active {
-            filter: brightness(0.8);
+        #main-btn {
+            background: #2ECC71;
+            min-width: 18vw;
+        }
+
+        #reset-btn {
+            background: #E74C3C;
         }
 
         .fast-drop {
-            background: #E74C3C !important;
+            background: #E67E22 !important;
         }
 
         .next-block {
@@ -127,6 +133,11 @@
             overflow: hidden;
         }
 
+        .control-group {
+            display: flex;
+            gap: 2vw;
+        }
+
         @media (hover: hover) {
             .main-container {
                 padding: 20px;
@@ -137,23 +148,30 @@
             #game-board {
                 max-width: 400px;
             }
-            button:hover {
-                filter: brightness(1.1);
+            button {
+                min-width: 80px;
+                min-height: 80px;
+                font-size: 32px;
+                border-radius: 15px;
             }
         }
 
         @media (max-width: 768px) {
+            .main-container {
+                padding: 10px;
+            }
             .game-container {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto auto auto;
             }
             #game-board {
                 order: 1;
-                max-height: 60vh;
+                max-height: 50vh;
             }
             .side-panel {
                 flex-direction: row;
                 order: 2;
+                margin-top: 10px;
             }
             .control-panel {
                 order: 3;
@@ -182,9 +200,10 @@
             <canvas id="game-board"></canvas>
 
             <div class="side-panel">
-                <button id="start-btn">▶</button>
-                <button id="pause-btn">⏸</button>
-                <button id="reset-btn">↺</button>
+                <div class="game-controls">
+                    <button id="main-btn">▶</button>
+                    <button id="reset-btn">↺</button>
+                </div>
                 <div class="next-block">
                     <canvas id="next-block"></canvas>
                 </div>
@@ -192,10 +211,12 @@
         </div>
 
         <div class="control-panel">
-            <button ontouchstart="startContinuousMove('left')" ontouchend="stopContinuousMove()">←</button>
-            <button onclick="handleControl('rotate')">↻</button>
-            <button class="fast-drop" onclick="handleControl('drop')">↓</button>
-            <button ontouchstart="startContinuousMove('right')" ontouchend="stopContinuousMove()">→</button>
+            <div class="control-group">
+                <button ontouchstart="startContinuousMove('left')" ontouchend="stopContinuousMove()">←</button>
+                <button onclick="handleControl('rotate')">↻</button>
+                <button class="fast-drop" onclick="handleControl('drop')">↓</button>
+                <button ontouchstart="startContinuousMove('right')" ontouchend="stopContinuousMove()">→</button>
+            </div>
         </div>
     </div>
 
@@ -207,7 +228,9 @@
         const scoreElement = document.getElementById('score');
         const levelElement = document.getElementById('level');
         const highScoreElement = document.getElementById('high-score');
+        const mainBtn = document.getElementById('main-btn');
         
+        // 游戏配置
         const BOARD_WIDTH = 10;
         const BOARD_HEIGHT = 20;
         const COLORS = [
@@ -216,33 +239,15 @@
             '#2ECC71', '#9B59B6', '#1ABC9C', '#E67E22'
         ];
 
+        // 游戏状态
+        let gameState = 'stopped';
         let BLOCK_SIZE, PREVIEW_SIZE;
-
-        function calculateSizes() {
-            const gameBoardRect = canvas.getBoundingClientRect();
-            BLOCK_SIZE = Math.min(gameBoardRect.width / BOARD_WIDTH, gameBoardRect.height / BOARD_HEIGHT);
-            
-            const previewRect = nextCanvas.parentElement.getBoundingClientRect();
-            PREVIEW_SIZE = Math.min(previewRect.width, previewRect.height) * 0.8;
-        }
-
-        function initCanvas() {
-            calculateSizes();
-            const dpr = window.devicePixelRatio || 1;
-            
-            canvas.width = BLOCK_SIZE * BOARD_WIDTH * dpr;
-            canvas.height = BLOCK_SIZE * BOARD_HEIGHT * dpr;
-            ctx.scale(dpr, dpr);
-            ctx.translate(0.5, 0.5);
-            
-            nextCanvas.width = PREVIEW_SIZE * dpr;
-            nextCanvas.height = PREVIEW_SIZE * dpr;
-            nextCtx.scale(dpr, dpr);
-            nextCtx.translate(0.5, 0.5);
-        }
-
         let highScore = localStorage.getItem('tetrisHighScore') || 0;
-        highScoreElement.textContent = highScore;
+        let lastTime = 0;
+        let dropCounter = 0;
+        let dropInterval = 1000;
+        let moveInterval = null;
+        const tetris = new Tetris();
 
         class Tetris {
             constructor() {
@@ -275,7 +280,12 @@
             merge() {
                 this.current.shape.forEach((row, y) => {
                     row.forEach((value, x) => {
-                        if (value) this.board[y + this.current.y][x + this.current.x] = value;
+                        if (value) {
+                            const boardY = y + this.current.y;
+                            if (boardY >= 0) {
+                                this.board[boardY][x + this.current.x] = value;
+                            }
+                        }
                     });
                 });
             }
@@ -323,14 +333,6 @@
             }
         }
 
-        const tetris = new Tetris();
-        let lastTime = 0;
-        let dropCounter = 0;
-        let dropInterval = 1000;
-        let gameRunning = false;
-        let isPaused = false;
-        let moveInterval = null;
-
         function initGame() {
             tetris.board = Array(BOARD_HEIGHT).fill().map(() => Array(BOARD_WIDTH).fill(0));
             tetris.score = 0;
@@ -340,6 +342,29 @@
             tetris.next = tetris.createPiece();
             scoreElement.textContent = 0;
             levelElement.textContent = 1;
+            lastTime = performance.now();
+        }
+
+        function calculateSizes() {
+            const gameBoardRect = canvas.getBoundingClientRect();
+            BLOCK_SIZE = Math.min(gameBoardRect.width / BOARD_WIDTH, gameBoardRect.height / BOARD_HEIGHT);
+            const previewRect = nextCanvas.parentElement.getBoundingClientRect();
+            PREVIEW_SIZE = Math.min(previewRect.width, previewRect.height) * 0.8;
+        }
+
+        function initCanvas() {
+            calculateSizes();
+            const dpr = window.devicePixelRatio || 1;
+            
+            canvas.width = BLOCK_SIZE * BOARD_WIDTH * dpr;
+            canvas.height = BLOCK_SIZE * BOARD_HEIGHT * dpr;
+            ctx.scale(dpr, dpr);
+            ctx.translate(0.5, 0.5);
+            
+            nextCanvas.width = PREVIEW_SIZE * dpr;
+            nextCanvas.height = PREVIEW_SIZE * dpr;
+            nextCtx.scale(dpr, dpr);
+            nextCtx.translate(0.5, 0.5);
         }
 
         function drawBlock(x, y, color) {
@@ -390,12 +415,12 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            if (tetris.current && gameRunning) {
+            if (tetris.current && gameState === 'running') {
                 const previewY = calculateDropPosition();
                 tetris.current.shape.forEach((row, y) => {
                     row.forEach((value, x) => {
                         if (value) {
-                            ctx.fillStyle = tetris.current.color + '60';
+                            ctx.fillStyle = tetris.current.color + 'A0';
                             ctx.fillRect(
                                 (tetris.current.x + x) * BLOCK_SIZE,
                                 (previewY + y) * BLOCK_SIZE,
@@ -434,9 +459,7 @@
         }
 
         function update(time = 0) {
-            if (!gameRunning) return;
-            if (isPaused) {
-                lastTime = time;
+            if (gameState !== 'running') {
                 requestAnimationFrame(update);
                 return;
             }
@@ -462,8 +485,9 @@
                     tetris.next = tetris.createPiece();
                     
                     if (tetris.collide()) {
-                        gameRunning = false;
+                        gameState = 'stopped';
                         tetris.gameOver = true;
+                        updateMainButton();
                     }
                 }
                 dropCounter = 0;
@@ -477,7 +501,7 @@
         }
 
         function handleControl(action) {
-            if (!gameRunning || tetris.gameOver) return;
+            if (gameState !== 'running' || tetris.gameOver) return;
             
             switch(action) {
                 case 'left': moveLeft(); break;
@@ -486,17 +510,6 @@
                 case 'drop': dropPiece(); break;
             }
             draw();
-        }
-
-        function startContinuousMove(direction) {
-            if (moveInterval) return;
-            handleControl(direction);
-            moveInterval = setInterval(() => handleControl(direction), 100);
-        }
-
-        function stopContinuousMove() {
-            clearInterval(moveInterval);
-            moveInterval = null;
         }
 
         function moveLeft() {
@@ -534,53 +547,62 @@
             draw();
         }
 
-        // 事件监听
-        document.addEventListener('keydown', (e) => {
-            if (!gameRunning) return;
-            switch(e.key) {
-                case 'ArrowLeft': handleControl('left'); break;
-                case 'ArrowRight': handleControl('right'); break;
-                case 'ArrowUp': handleControl('rotate'); break;
-                case 'ArrowDown': case ' ': handleControl('drop'); break;
-            }
-        });
+        function startContinuousMove(direction){
+        if (movelnterval) return ; 
+        handleControl (direction); 
+        movelnterval = setInterval (()=> handleControl (direction),100);
+        }
+        
+            function stopContinuousMove() {
+        clearInterval(moveInterval);
+        moveInterval = null;
+    }
 
-        document.getElementById('start-btn').addEventListener('click', () => {
-            if (!gameRunning) {
-                initGame();
-                gameRunning = true;
-                isPaused = false;
-                lastTime = performance.now();
-                requestAnimationFrame(update);
-            }
-        });
+    function updateMainButton() {
+        mainBtn.textContent = gameState === 'running' ? '⏸' : '▶';
+        mainBtn.style.backgroundColor = gameState === 'running' ? '#3498DB' : '#2ECC71';
+    }
 
-        document.getElementById('pause-btn').addEventListener('click', () => {
-            isPaused = !isPaused;
-            document.getElementById('pause-btn').textContent = isPaused ? '▶' : '⏸';
-            if (!isPaused) {
-                lastTime = performance.now();
-                requestAnimationFrame(update);
-            }
-        });
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            gameRunning = false;
-            isPaused = false;
+    mainBtn.addEventListener('click', () => {
+        if (gameState === 'stopped') {
             initGame();
-            draw();
-        });
+            gameState = 'running';
+        } else if (gameState === 'running') {
+            gameState = 'paused';
+        } else {
+            gameState = 'running';
+        }
+        updateMainButton();
+        requestAnimationFrame(update);
+    });
 
-        window.addEventListener('resize', () => {
-            calculateSizes();
-            initCanvas();
-            draw();
-        });
-
-        // 初始化
-        initCanvas();
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        gameState = 'stopped';
         initGame();
         draw();
-    </script>
+        updateMainButton();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (gameState === 'stopped') return;
+        switch(e.key) {
+            case 'ArrowLeft': handleControl('left'); break;
+            case 'ArrowRight': handleControl('right'); break;
+            case 'ArrowUp': handleControl('rotate'); break;
+            case 'ArrowDown': case ' ': handleControl('drop'); break;
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        calculateSizes();
+        initCanvas();
+        draw();
+    });
+
+    highScoreElement.textContent = highScore;
+    initCanvas();
+    initGame();
+    draw();
+</script>
 </body>
 </html>
