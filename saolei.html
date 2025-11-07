@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫雷游戏</title>
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* 页面整体样式 */
+        body {
+            background-color: #121212; /* 深色背景 */
+            color: #e0e0e0; /* 浅色文字 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 600px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* 标题区域 */
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #bb86fc; /* 紫色标题 */
+            margin-bottom: 10px;
+            font-weight: 300;
+            font-size: 2.2rem;
+        }
+
+        /* 游戏信息区域（剩余雷数、标记按钮、计时器） */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 450px;
+            margin-bottom: 10px;
+        }
+
+        /* 信息框通用样式 */
+        .info-box {
+            background-color: #1e1e1e;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            min-width: 100px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 剩余雷数样式 */
+        .mines-count {
+            color: #ff5252; /* 红色数字 */
+        }
+
+        /* 计时器样式 */
+        .timer {
+            color: #03dac6; /* 青色数字 */
+        }
+
+        /* 标记按钮样式 */
+        .flag-toggle {
+            background-color: #1e1e1e;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            min-width: 60px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        /* 标记按钮激活状态 */
+        .flag-toggle.active {
+            background-color: #bb86fc; /* 激活时变为紫色 */
+            color: #121212;
+        }
+
+        /* 游戏板样式 */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr); /* 默认9列 */
+            gap: 2px;
+            background-color: #2d2d2d;
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 450px;
+            aspect-ratio: 1 / 1; /* 保持正方形 */
+        }
+
+        /* 格子样式 */
+        .cell {
+            background-color: #424242;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            aspect-ratio: 1 / 1; /* 保持正方形 */
+        }
+
+        /* 格子悬停效果 */
+        .cell:hover {
+            background-color: #4d4d4d;
+        }
+
+        /* 已揭示格子样式 */
+        .cell.revealed {
+            background-color: #2d2d2d;
+            cursor: default;
+        }
+
+        /* 已揭示格子悬停效果 */
+        .cell.revealed:hover {
+            background-color: #2d2d2d;
+        }
+
+        /* 地雷格子样式 */
+        .cell.mine {
+            background-color: #ff5252; /* 红色背景 */
+        }
+
+        /* 标记格子样式（使用红旗表情） */
+        .cell.flagged::before {
+            content: "🚩";
+        }
+
+        /* 数字颜色样式 */
+        .number-1 { color: #2196f3; } /* 蓝色 */
+        .number-2 { color: #4caf50; } /* 绿色 */
+        .number-3 { color: #f44336; } /* 红色 */
+        .number-4 { color: #9c27b0; } /* 紫色 */
+        .number-5 { color: #ff9800; } /* 橙色 */
+        .number-6 { color: #00bcd4; } /* 青色 */
+        .number-7 { color: #795548; } /* 棕色 */
+        .number-8 { color: #607d8b; } /* 灰色 */
+
+        /* 控制按钮区域 */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* 按钮通用样式 */
+        button {
+            background-color: #bb86fc; /* 紫色按钮 */
+            color: #121212;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 按钮悬停效果 */
+        button:hover {
+            background-color: #9a67ea;
+            transform: translateY(-2px);
+        }
+
+        /* 按钮点击效果 */
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* 消息区域样式 */
+        .message {
+            height: 30px;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-top: 10px;
+            color: #bb86fc;
+        }
+
+        /* 游戏说明区域样式 */
+        .instructions {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .instructions h2 {
+            color: #03dac6; /* 青色标题 */
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .instructions p {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        /* 响应式设计 - 中等屏幕 */
+        @media (max-width: 500px) {
+            .game-board {
+                max-width: 350px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .info-box, .flag-toggle {
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+            
+            button {
+                padding: 10px 18px;
+            }
+        }
+
+        /* 响应式设计 - 小屏幕 */
+        @media (max-width: 400px) {
+            .game-board {
+                max-width: 300px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .info-box, .flag-toggle {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+            
+            button {
+                padding: 8px 14px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- 游戏信息区域：显示剩余雷数、标记按钮和计时器 -->
+        <div class="game-info">
+            <div class="info-box mines-count">剩余雷数: <span id="mines-count">10</span></div>
+            <div class="flag-toggle" id="flag-toggle">🚩</div>
+            <div class="info-box timer">时间: <span id="timer">0</span>秒</div>
+        </div>
+        
+        <!-- 游戏板区域：格子将动态生成在这里 -->
+        <div class="game-board" id="game-board"></div>
+        
+        <!-- 消息区域：显示游戏状态信息 -->
+        <div class="message" id="message"></div>
+        
+        <!-- 控制按钮区域 -->
+        <div class="controls">
+            <button id="reset-btn">重新开始</button>
+            <button id="difficulty-btn">难度: 普通</button>
+        </div>
+        
+        <!-- 游戏说明区域 -->
+        <div class="instructions">
+            <h2>游戏说明</h2>
+            <p>• 左键点击：揭开格子</p>
+            <p>• 右键点击：标记/取消标记地雷</p>
+            <p>• 🚩按钮：切换标记模式（所有设备通用）</p>
+            <p>• 数字表示周围8个格子中的地雷数量</p>
+            <p>• 标记出所有地雷并揭开所有安全格子即可获胜</p>
+        </div>
+    </div>
+
+    <script>
+        // 当DOM内容加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 游戏配置 - 只保留普通和困难两个难度
+            const config = {
+                normal: { rows: 9, cols: 9, mines: 10 },  // 普通难度：9x9网格，10个雷
+                hard: { rows: 16, cols: 16, mines: 40 }   // 困难难度：16x16网格，40个雷
+            };
+            
+            // 当前难度设置
+            let currentDifficulty = 'normal';
+            
+            // 游戏状态对象
+            let gameState = {
+                board: [],           // 游戏板数据（存储每个格子的内容）
+                mines: [],           // 地雷位置数组
+                revealed: [],        // 已揭示格子状态
+                flagged: [],         // 已标记格子状态
+                gameOver: false,     // 游戏是否结束
+                gameWon: false,      // 游戏是否胜利
+                timer: 0,            // 游戏计时器
+                timerInterval: null, // 计时器引用
+                firstClick: true     // 是否是第一次点击
+            };
+            
+            // 标记模式状态
+            let flagMode = false;
+            
+            // DOM元素引用
+            const gameBoard = document.getElementById('game-board');
+            const minesCountEl = document.getElementById('mines-count');
+            const timerEl = document.getElementById('timer');
+            const messageEl = document.getElementById('message');
+            const resetBtn = document.getElementById('reset-btn');
+            const difficultyBtn = document.getElementById('difficulty-btn');
+            const flagToggle = document.getElementById('flag-toggle');
+            
+            // 初始化游戏函数
+            function initGame() {
+                // 获取当前难度的配置
+                const { rows, cols, mines } = config[currentDifficulty];
+                
+                // 重置游戏状态
+                gameState = {
+                    board: Array(rows).fill().map(() => Array(cols).fill(0)),
+                    mines: [],
+                    revealed: Array(rows).fill().map(() => Array(cols).fill(false)),
+                    flagged: Array(rows).fill().map(() => Array(cols).fill(false)),
+                    gameOver: false,
+                    gameWon: false,
+                    timer: 0,
+                    timerInterval: null,
+                    firstClick: true
+                };
+                
+                // 重置标记模式
+                flagMode = false;
+                flagToggle.classList.remove('active');
+                
+                // 更新UI显示
+                minesCountEl.textContent = mines;
+                timerEl.textContent = '0';
+                messageEl.textContent = '';
+                messageEl.style.color = '#bb86fc';
+                
+                // 停止之前的计时器
+                if (gameState.timerInterval) {
+                    clearInterval(gameState.timerInterval);
+                }
+                
+                // 创建游戏板
+                createBoard(rows, cols);
+                
+                // 设置计时器
+                gameState.timerInterval = setInterval(() => {
+                    // 只有在游戏进行中且不是第一次点击时才计时
+                    if (!gameState.gameOver && !gameState.gameWon && !gameState.firstClick) {
+                        gameState.timer++;
+                        timerEl.textContent = gameState.timer;
+                    }
+                }, 1000);
+            }
+            
+            // 创建游戏板函数
+            function createBoard(rows, cols) {
+                // 清空游戏板
+                gameBoard.innerHTML = '';
+                
+                // 设置网格列数
+                gameBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                
+                // 创建所有格子
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        // 创建格子元素
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        
+                        // 添加左键点击事件监听器
+                        cell.addEventListener('click', () => handleLeftClick(i, j));
+                        
+                        // 添加右键点击事件监听器
+                        cell.addEventListener('contextmenu', (e) => {
+                            e.preventDefault(); // 阻止默认右键菜单
+                            handleRightClick(i, j);
+                        });
+                        
+                        // 将格子添加到游戏板
+                        gameBoard.appendChild(cell);
+                    }
+                }
+            }
+            
+            // 放置地雷函数（在第一次点击后调用）
+            function placeMines(firstRow, firstCol) {
+                const { rows, cols, mines } = config[currentDifficulty];
+                let minesPlaced = 0;
+                
+                // 随机放置地雷
+                while (minesPlaced < mines) {
+                    const row = Math.floor(Math.random() * rows);
+                    const col = Math.floor(Math.random() * cols);
+                    
+                    // 确保首次点击的位置不是雷，并且该位置还没有雷
+                    if ((row !== firstRow || col !== firstCol) && !gameState.mines.some(mine => mine.row === row && mine.col === col)) {
+                        gameState.mines.push({ row, col });
+                        gameState.board[row][col] = -1; // -1 表示雷
+                        minesPlaced++;
+                    }
+                }
+                
+                // 计算每个格子周围的雷数
+                calculateNumbers();
+            }
+            
+            // 计算每个格子周围的雷数
+            function calculateNumbers() {
+                const { rows, cols } = config[currentDifficulty];
+                
+                // 定义八个方向（上、下、左、右、四个对角线）
+                const directions = [
+                    [-1, -1], [-1, 0], [-1, 1],
+                    [0, -1],           [0, 1],
+                    [1, -1],  [1, 0],  [1, 1]
+                ];
+                
+                // 遍历所有格子
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        // 如果当前格子不是雷
+                        if (gameState.board[i][j] !== -1) {
+                            let count = 0;
+                            
+                            // 检查周围八个方向的格子
+                            for (const [dx, dy] of directions) {
+                                const newRow = i + dx;
+                                const newCol = j + dy;
+                                
+                                // 确保新位置在游戏板范围内并且是雷
+                                if (
+                                    newRow >= 0 && newRow < rows &&
+                                    newCol >= 0 && newCol < cols &&
+                                    gameState.board[newRow][newCol] === -1
+                                ) {
+                                    count++;
+                                }
+                            }
+                            
+                            // 设置当前格子的数字
+                            gameState.board[i][j] = count;
+                        }
+                    }
+                }
+            }
+            
+            // 处理左键点击函数
+            function handleLeftClick(row, col) {
+                // 如果游戏结束或胜利，不执行任何操作
+                if (gameState.gameOver || gameState.gameWon) {
+                    return;
+                }
+                
+                // 如果标记模式激活，左键执行标记操作
+                if (flagMode) {
+                    toggleFlag(row, col);
+                    return;
+                }
+                
+                // 如果格子已标记，左键点击取消标记
+                if (gameState.flagged[row][col]) {
+                    toggleFlag(row, col);
+                    return;
+                }
+                
+                // 首次点击放置地雷
+                if (gameState.firstClick) {
+                    gameState.firstClick = false;
+                    placeMines(row, col);
+                }
+                
+                // 如果点击到雷，游戏结束
+                if (gameState.board[row][col] === -1) {
+                    gameOver(false);
+                    revealAllMines();
+                    return;
+                }
+                
+                // 揭示格子
+                revealCell(row, col);
+                
+                // 检查是否获胜
+                checkWin();
+            }
+            
+            // 处理右键点击函数（标记/取消标记）
+            function handleRightClick(row, col) {
+                // 如果游戏结束或胜利，或格子已揭示，不执行任何操作
+                if (gameState.gameOver || gameState.gameWon || gameState.revealed[row][col]) {
+                    return;
+                }
+                
+                // 切换标记状态
+                toggleFlag(row, col);
+            }
+            
+            // 切换标记状态函数
+            function toggleFlag(row, col) {
+                // 切换标记状态
+                gameState.flagged[row][col] = !gameState.flagged[row][col];
+                
+                // 获取对应的格子元素
+                const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                
+                // 更新格子样式
+                if (gameState.flagged[row][col]) {
+                    cell.classList.add('flagged');
+                } else {
+                    cell.classList.remove('flagged');
+                }
+                
+                // 更新剩余雷数显示
+                updateMinesCount();
+            }
+            
+            // 揭示格子函数
+            function revealCell(row, col) {
+                const { rows, cols } = config[currentDifficulty];
+                
+                // 如果已经揭示或标记，或超出边界，直接返回
+                if (
+                    gameState.revealed[row][col] ||
+                    gameState.flagged[row][col] ||
+                    row < 0 || row >= rows ||
+                    col < 0 || col >= cols
+                ) {
+                    return;
+                }
+                
+                // 标记格子为已揭示
+                gameState.revealed[row][col] = true;
+                
+                // 获取对应的格子元素
+                const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                cell.classList.add('revealed');
+                
+                // 如果是数字格子，显示数字并设置颜色
+                if (gameState.board[row][col] > 0) {
+                    cell.textContent = gameState.board[row][col];
+                    cell.classList.add(`number-${gameState.board[row][col]}`);
+                }
+                
+                // 如果是空白格子，递归揭示周围格子
+                if (gameState.board[row][col] === 0) {
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1],           [0, 1],
+                        [1, -1],  [1, 0],  [1, 1]
+                    ];
+                    
+                    // 递归揭示周围八个方向的格子
+                    for (const [dx, dy] of directions) {
+                        revealCell(row + dx, col + dy);
+                    }
+                }
+            }
+            
+            // 揭示所有地雷函数（游戏结束时调用）
+            function revealAllMines() {
+                // 遍历所有地雷位置
+                for (const mine of gameState.mines) {
+                    const cell = document.querySelector(`.cell[data-row="${mine.row}"][data-col="${mine.col}"]`);
+                    cell.classList.add('mine');
+                    cell.textContent = '💣';
+                }
+            }
+            
+            // 检查是否获胜函数
+            function checkWin() {
+                const { rows, cols, mines } = config[currentDifficulty];
+                let revealedCount = 0;
+                
+                // 计算已揭示的格子数量
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        if (gameState.revealed[i][j]) {
+                            revealedCount++;
+                        }
+                    }
+                }
+                
+                // 如果已揭示的格子数等于总格子数减去地雷数，则获胜
+                if (revealedCount === rows * cols - mines) {
+                    gameOver(true);
+                }
+            }
+            
+            // 游戏结束函数
+            function gameOver(isWin) {
+                // 设置游戏状态
+                gameState.gameOver = true;
+                gameState.gameWon = isWin;
+                
+                // 停止计时器
+                if (gameState.timerInterval) {
+                    clearInterval(gameState.timerInterval);
+                }
+                
+                // 显示相应消息
+                if (isWin) {
+                    messageEl.textContent = '恭喜！你赢了！';
+                    messageEl.style.color = '#4caf50'; // 绿色胜利消息
+                } else {
+                    messageEl.textContent = '游戏结束！你踩到雷了！';
+                    messageEl.style.color = '#ff5252'; // 红色失败消息
+                }
+            }
+            
+            // 更新剩余雷数显示函数
+            function updateMinesCount() {
+                const { mines } = config[currentDifficulty];
+                let flaggedCount = 0;
+                
+                // 计算已标记的格子数量
+                for (let i = 0; i < gameState.flagged.length; i++) {
+                    for (let j = 0; j < gameState.flagged[i].length; j++) {
+                        if (gameState.flagged[i][j]) {
+                            flaggedCount++;
+                        }
+                    }
+                }
+                
+                // 更新剩余雷数显示
+                minesCountEl.textContent = mines - flaggedCount;
+            }
+            
+            // 切换标记模式函数
+            function toggleFlagMode() {
+                // 切换标记模式状态
+                flagMode = !flagMode;
+                
+                // 更新标记按钮样式
+                if (flagMode) {
+                    flagToggle.classList.add('active');
+                } else {
+                    flagToggle.classList.remove('active');
+                }
+            }
+            
+            // 切换难度函数
+            function changeDifficulty() {
+                // 难度选项
+                const difficulties = ['normal', 'hard'];
+                const difficultyNames = ['普通', '困难'];
+                
+                // 获取当前难度索引
+                let currentIndex = difficulties.indexOf(currentDifficulty);
+                
+                // 切换到下一个难度（循环）
+                currentIndex = (currentIndex + 1) % difficulties.length;
+                
+                // 更新当前难度
+                currentDifficulty = difficulties[currentIndex];
+                
+                // 更新难度按钮文本
+                difficultyBtn.textContent = `难度: ${difficultyNames[currentIndex]}`;
+                
+                // 重新初始化游戏
+                initGame();
+            }
+            
+            // 事件监听器设置
+            
+            // 重新开始按钮点击事件
+            resetBtn.addEventListener('click', initGame);
+            
+            // 难度切换按钮点击事件
+            difficultyBtn.addEventListener('click', changeDifficulty);
+            
+            // 标记按钮点击事件
+            flagToggle.addEventListener('click', toggleFlagMode);
+            
+            // 初始化游戏
+            initGame();
+        });
+    </script>
+</body>
+</html>
