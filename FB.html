@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>深色主题Flappy Bird</title>
+    <title>Flappy Bird</title>
     <style>
         /* 重置默认样式 */
         * {
@@ -174,13 +174,15 @@
                 font-size: 0.85rem;
             }
         }
+        
+        
     </style>
 </head>
 <body>
     <!-- 游戏主容器 -->
     <div class="container">
-        <!-- 游戏标题 -->
-        <h1>Flappy Bird</h1>
+        
+        
         
         <!-- 游戏信息显示区域 -->
         <div class="game-info">
@@ -224,6 +226,8 @@
             </ul>
         </div>
     </div>
+    
+   
 
     <script>
         // 获取Canvas元素和2D绘图上下文
@@ -253,7 +257,7 @@
             width: 30, // 小鸟宽度
             height: 25, // 小鸟高度
             gravity: 0.3, // 重力值，调小使下坠速度变慢
-            lift: -10, // 上升力度
+            lift: -7, // 上升力度
             velocity: 0 // 当前速度
         };
 
@@ -475,6 +479,7 @@
         // 结束游戏函数
         function endGame() {
             gameOver = true; // 设置游戏结束状态
+            gameStarted = false; // 设置游戏未开始状态
             
             // 更新最高分
             if (score > highScore) {
@@ -502,7 +507,12 @@
         // 键盘控制 - 空格键跳跃
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
-                jump();
+                // 如果游戏正在进行中，阻止默认行为（页面滚动）
+                if (gameStarted && !gameOver) {
+                    e.preventDefault();
+                    jump();
+                }
+                // 如果游戏未开始或已结束，允许默认行为（页面滚动）
             }
         });
 
