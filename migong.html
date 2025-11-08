@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- 文档基础设置 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迷宫</title>
+    
+    <!-- CSS样式部分 -->
+    <style>
+        /* 全局重置和盒模型设置 */
+        * {
+            margin: 0;           /* 清除默认外边距 */
+            padding: 0;          /* 清除默认内边距 */
+            box-sizing: border-box; /* 使用border-box盒模型 */
+        }
+
+        /* 主体样式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* 设置字体 */
+            background-color: #121212; /* 深色背景 */
+            color: #e0e0e0; /* 浅灰色文字 */
+            display: flex; /* 使用flex布局 */
+            flex-direction: column; /* 垂直方向排列 */
+            align-items: center; /* 水平居中 */
+            justify-content: center; /* 垂直居中 */
+            min-height: 100vh; /* 最小高度为视口高度 */
+            padding: 20px; /* 内边距 */
+        }
+
+        /* 主容器样式 */
+        .container {
+            width: 100%; /* 宽度100% */
+            max-width: 800px; /* 最大宽度限制 */
+            display: flex; /* 使用flex布局 */
+            flex-direction: column; /* 垂直方向排列 */
+            align-items: center; /* 水平居中 */
+        }
+
+        /* 游戏信息区域样式 */
+        .game-info {
+            display: flex; /* 使用flex布局 */
+            justify-content: space-between; /* 内容均匀分布 */
+            width: 100%; /* 宽度100% */
+            margin-bottom: 15px; /* 底部外边距 */
+            background: rgba(255, 255, 255, 0.05); /* 半透明白色背景 */
+            padding: 10px 15px; /* 上下10px，左右15px内边距 */
+            border-radius: 10px; /* 圆角 */
+            backdrop-filter: blur(10px); /* 背景模糊效果 */
+        }
+
+        /* 信息项样式（如时间、移动次数） */
+        .info-item {
+            display: flex; /* 使用flex布局 */
+            align-items: center; /* 垂直居中 */
+            gap: 8px; /* 元素间距 */
+        }
+
+        /* 信息标签样式 */
+        .info-label {
+            font-size: 0.9rem; /* 字体大小 */
+            color: #b0b0b0; /* 浅灰色 */
+        }
+
+        /* 信息值样式 */
+        .info-value {
+            font-size: 1.1rem; /* 字体大小 */
+            font-weight: 600; /* 粗体 */
+            color: #ffffff; /* 白色 */
+        }
+
+        /* 难度选择器样式 */
+        .difficulty-selector {
+            display: flex; /* 使用flex布局 */
+            align-items: center; /* 垂直居中 */
+            gap: 8px; /* 元素间距 */
+            position: relative; /* 相对定位，用于绝对定位子元素 */
+        }
+
+        /* 难度下拉选择框样式 */
+        #difficulty {
+            background: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框 */
+            border-radius: 5px; /* 圆角 */
+            color: white; /* 白色文字 */
+            padding: 5px 25px 5px 10px; /* 内边距：上右下左 */
+            font-size: 0.9rem; /* 字体大小 */
+            cursor: pointer; /* 鼠标指针样式 */
+            appearance: none; /* 移除默认样式 */
+            -webkit-appearance: none; /* Safari和Chrome兼容 */
+            -moz-appearance: none; /* Firefox兼容 */
+        }
+
+        /* 修复：设置下拉选项的样式 */
+        #difficulty option {
+            background-color: #2a2a2a; /* 深色背景 */
+            color: #e0e0e0; /* 浅色文字 */
+        }
+
+        /* 自定义下拉箭头 */
+        //.difficulty-selector::after {
+            content: "▼"; /* 箭头内容 */
+            font-size: 0.7rem; /* 箭头大小 */
+            color: #b0b0b0; /* 箭头颜色 */
+            position: absolute; /* 绝对定位 */
+            right: 10px; /* 距离右侧10px */
+            pointer-events: none; /* 防止箭头干扰点击事件 */
+        }
+
+        /* 迷宫容器样式 */
+        .maze-container {
+            position: relative; /* 相对定位，用于绝对定位子元素 */
+            width: 100%; /* 宽度100% */
+            max-width: 600px; /* 最大宽度限制 */
+            margin: 0 auto; /* 水平居中 */
+        }
+
+        /* 迷宫画布样式 */
+        #maze {
+            width: 100%; /* 宽度100% */
+            height: auto; /* 高度自适应 */
+            background-color: #1e1e1e; /* 深灰色背景 */
+            border-radius: 8px; /* 圆角 */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* 阴影效果 */
+        }
+
+        /* 控制区域样式 */
+        .controls {
+            display: flex; /* 使用flex布局 */
+            flex-direction: column; /* 垂直方向排列 */
+            align-items: center; /* 水平居中 */
+            margin-top: 20px; /* 顶部外边距 */
+            width: 100%; /* 宽度100% */
+        }
+
+        /* 控制按钮网格布局 */
+        .control-buttons {
+            display: grid; /* 网格布局 */
+            grid-template-columns: repeat(3, 1fr); /* 3列等宽 */
+            grid-template-rows: repeat(3, 1fr); /* 3行等高 */
+            gap: 10px; /* 网格间距 */
+            margin-bottom: 20px; /* 底部外边距 */
+        }
+
+        /* 控制按钮通用样式 */
+        .control-btn {
+            width: 60px; /* 宽度 */
+            height: 60px; /* 高度 */
+            background: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+            border: none; /* 无边框 */
+            border-radius: 50%; /* 圆形按钮 */
+            color: white; /* 白色文字 */
+            font-size: 1.5rem; /* 字体大小 */
+            display: flex; /* 使用flex布局 */
+            align-items: center; /* 垂直居中 */
+            justify-content: center; /* 水平居中 */
+            cursor: pointer; /* 鼠标指针样式 */
+            transition: all 0.2s ease; /* 过渡动画 */
+        }
+
+        /* 控制按钮悬停效果 */
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2); /* 悬停时背景变亮 */
+        }
+
+        /* 控制按钮按下效果 */
+        .control-btn:active {
+            transform: scale(0.95); /* 按下时缩小 */
+        }
+
+        /* 上方向按钮位置 */
+        #up {
+            grid-column: 2; /* 第二列 */
+            grid-row: 1; /* 第一行 */
+        }
+
+        /* 左方向按钮位置 */
+        #left {
+            grid-column: 1; /* 第一列 */
+            grid-row: 2; /* 第二行 */
+        }
+
+        /* 下方向按钮位置 */
+        #down {
+            grid-column: 2; /* 第二列 */
+            grid-row: 3; /* 第三行 */
+        }
+
+        /* 右方向按钮位置 */
+        #right {
+            grid-column: 3; /* 第三列 */
+            grid-row: 2; /* 第二行 */
+        }
+
+        /* 游戏说明文字样式 */
+        .instructions {
+            margin-top: 20px; /* 顶部外边距 */
+            text-align: center; /* 文字居中 */
+            color: #b0b0b0; /* 浅灰色 */
+            font-size: 0.9rem; /* 字体大小 */
+            max-width: 500px; /* 最大宽度限制 */
+        }
+
+        /* 游戏消息弹窗样式（胜利/失败） */
+        .game-message {
+            position: absolute; /* 绝对定位 */
+            top: 50%; /* 垂直居中 */
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 精确居中 */
+            background: rgba(0, 0, 0, 0.8); /* 半透明黑色背景 */
+            padding: 20px 40px; /* 内边距 */
+            border-radius: 10px; /* 圆角 */
+            text-align: center; /* 文字居中 */
+            display: none; /* 默认隐藏 */
+            backdrop-filter: blur(10px); /* 背景模糊 */
+            z-index: 10; /* 确保在最上层 */
+        }
+
+        /* 消息标题样式 */
+        .message-title {
+            font-size: 1.8rem; /* 字体大小 */
+            margin-bottom: 10px; /* 底部外边距 */
+            color: #ffffff; /* 白色 */
+        }
+
+        /* 消息正文样式 */
+        .message-text {
+            margin-bottom: 20px; /* 底部外边距 */
+        }
+
+        /* 通用按钮样式 */
+        .btn {
+            background: linear-gradient(45deg, #6a11cb, #2575fc); /* 渐变背景 */
+            border: none; /* 无边框 */
+            border-radius: 30px; /* 椭圆形按钮 */
+            color: white; /* 白色文字 */
+            padding: 10px 25px; /* 内边距 */
+            font-size: 1rem; /* 字体大小 */
+            cursor: pointer; /* 鼠标指针样式 */
+            transition: all 0.3s ease; /* 过渡动画 */
+        }
+
+        /* 按钮悬停效果 */
+        .btn:hover {
+            transform: translateY(-2px); /* 悬停时上移 */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* 阴影效果 */
+        }
+
+        /* 移动设备响应式样式 */
+        @media (max-width: 600px) {
+            /* 小屏幕上垂直排列游戏信息 */
+            .game-info {
+                flex-direction: column; /* 垂直方向排列 */
+                gap: 10px; /* 元素间距 */
+            }
+            
+            /* 小屏幕上缩小控制按钮 */
+            .control-btn {
+                width: 50px; /* 缩小宽度 */
+                height: 50px; /* 缩小高度 */
+                font-size: 1.2rem; /* 缩小字体 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 游戏信息区域 -->
+        <div class="game-info">
+            <!-- 时间信息 -->
+            <div class="info-item">
+                <span class="info-label">时间</span> <!-- 时间标签 -->
+                <span id="timer" class="info-value">00:00</span> <!-- 时间显示 -->
+            </div>
+            <!-- 移动次数信息 -->
+            <div class="info-item">
+                <span class="info-label">移动次数</span> <!-- 移动次数标签 -->
+                <span id="moves" class="info-value">0</span> <!-- 移动次数显示 -->
+            </div>
+            <!-- 难度选择器 -->
+            <div class="difficulty-selector">
+                <span class="info-label">难度</span> <!-- 难度标签 -->
+                <!-- 难度下拉选择框 -->
+                <select id="difficulty">
+                    <option value="easy">简单</option> <!-- 简单难度选项 -->
+                    <option value="medium" selected>中等</option> <!-- 中等难度选项（默认选中） -->
+                    <option value="hard">困难</option> <!-- 困难难度选项 -->
+                    <option value="expert">专家</option> <!-- 专家难度选项 -->
+                </select>
+            </div>
+        </div>
+        
+        <!-- 迷宫容器 -->
+        <div class="maze-container">
+            <!-- 迷宫画布 -->
+            <canvas id="maze"></canvas>
+            <!-- 游戏消息弹窗 -->
+            <div class="game-message" id="gameMessage">
+                <h2 class="message-title" id="messageTitle">恭喜！</h2> <!-- 消息标题 -->
+                <p class="message-text" id="messageText">你成功完成了迷宫！</p> <!-- 消息正文 -->
+                <!-- 重新开始按钮 -->
+                <button class="btn" id="restartBtn">再玩一次</button>
+            </div>
+        </div>
+        
+        <!-- 控制区域 -->
+        <div class="controls">
+            <!-- 控制按钮网格 -->
+            <div class="control-buttons">
+                <button class="control-btn" id="up">↑</button> <!-- 上方向按钮 -->
+                <button class="control-btn" id="left">←</button> <!-- 左方向按钮 -->
+                <button class="control-btn" id="down">↓</button> <!-- 下方向按钮 -->
+                <button class="control-btn" id="right">→</button> <!-- 右方向按钮 -->
+            </div>
+            <!-- 游戏说明 -->
+            <p class="instructions">
+                使用方向键或屏幕上的按钮移动。找到通往绿色终点的路径！
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript代码部分 -->
+    <script>
+        // 当DOM内容加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取画布和2D上下文
+            const canvas = document.getElementById('maze');
+            const ctx = canvas.getContext('2d');
+            
+            // 获取DOM元素
+            const timerElement = document.getElementById('timer');
+            const movesElement = document.getElementById('moves');
+            const difficultySelect = document.getElementById('difficulty');
+            const gameMessage = document.getElementById('gameMessage');
+            const messageTitle = document.getElementById('messageTitle');
+            const messageText = document.getElementById('messageText');
+            const restartBtn = document.getElementById('restartBtn');
+            
+            // 获取控制按钮元素
+            const upBtn = document.getElementById('up');
+            const downBtn = document.getElementById('down');
+            const leftBtn = document.getElementById('left');
+            const rightBtn = document.getElementById('right');
+            
+            // 游戏变量
+            let cellSize = 30; // 每个单元格的大小
+            let playerPos = { x: 1, y: 1 }; // 玩家初始位置
+            let moves = 0; // 移动次数
+            let startTime; // 游戏开始时间
+            let timerInterval; // 计时器间隔ID
+            let maze = []; // 迷宫数组
+            let rows = 15; // 迷宫行数
+            let cols = 15; // 迷宫列数
+            
+            // 难度设置 - 每种难度提升一倍
+            const difficultySettings = {
+                easy: { rows: 15, cols: 15 },     // 简单难度：15x15
+                medium: { rows: 21, cols: 21 },   // 中等难度：21x21
+                hard: { rows: 29, cols: 29 },     // 困难难度：29x29
+                expert: { rows: 39, cols: 39 }    // 专家难度：39x39
+            };
+            
+            // 调整画布大小函数
+            function resizeCanvas() {
+                // 获取迷宫容器
+                const container = document.querySelector('.maze-container');
+                // 计算合适的大小（不超过600px）
+                const size = Math.min(container.offsetWidth, 600);
+                // 设置画布尺寸
+                canvas.width = size;
+                canvas.height = size;
+                // 根据画布大小和列数计算单元格大小
+                cellSize = Math.floor(size / cols);
+                // 重新绘制迷宫
+                drawMaze();
+            }
+            
+            // 生成迷宫函数
+            function generateMaze() {
+                // 根据难度设置迷宫大小
+                const difficulty = difficultySelect.value;
+                rows = difficultySettings[difficulty].rows;
+                cols = difficultySettings[difficulty].cols;
+                
+                // 初始化迷宫，1表示墙，0表示路径
+                maze = Array(rows).fill().map(() => Array(cols).fill(1));
+                
+                // 使用深度优先搜索生成迷宫
+                function carvePath(x, y) {
+                    maze[y][x] = 0; // 标记为路径
+                    
+                    // 定义四个方向
+                    const directions = [
+                        [0, -2], // 上
+                        [2, 0],  // 右
+                        [0, 2],  // 下
+                        [-2, 0]  // 左
+                    ];
+                    
+                    // 随机排序方向
+                    directions.sort(() => Math.random() - 0.5);
+                    
+                    // 遍历每个方向
+                    for (const [dx, dy] of directions) {
+                        const nx = x + dx; // 新位置的x坐标
+                        const ny = y + dy; // 新位置的y坐标
+                        
+                        // 检查新位置是否在边界内且是墙
+                        if (nx > 0 && nx < cols - 1 && ny > 0 && ny < rows - 1 && maze[ny][nx] === 1) {
+                            // 打通中间的墙
+                            maze[y + dy/2][x + dx/2] = 0;
+                            // 递归生成路径
+                            carvePath(nx, ny);
+                        }
+                    }
+                }
+                
+                // 从起点开始生成迷宫
+                carvePath(1, 1);
+                
+                // 设置终点（右下角）
+                maze[rows-2][cols-2] = 2;
+                
+                // 确保起点和终点是通路
+                maze[1][1] = 0; // 起点
+                maze[rows-2][cols-2] = 2; // 终点
+            }
+            
+            // 绘制迷宫函数
+            function drawMaze() {
+                // 清除画布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制背景
+                ctx.fillStyle = '#1e1e1e';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制迷宫
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        if (maze[y][x] === 1) {
+                            // 绘制墙
+                            ctx.fillStyle = '#333333';
+                            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                        } else if (maze[y][x] === 2) {
+                            // 绘制终点
+                            ctx.fillStyle = '#4CAF50';
+                            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                            
+                            // 绘制终点标志
+                            ctx.fillStyle = '#1e1e1e';
+                            ctx.beginPath(); // 开始绘制路径
+                            ctx.arc(
+                                x * cellSize + cellSize/2, // 圆心x坐标
+                                y * cellSize + cellSize/2, // 圆心y坐标
+                                cellSize/4, // 半径
+                                0, // 起始角度
+                                Math.PI * 2 // 结束角度（完整圆）
+                            );
+                            ctx.fill(); // 填充圆形
+                        }
+                    }
+                }
+                
+                // 绘制玩家
+                ctx.fillStyle = '#2196F3'; // 蓝色
+                ctx.beginPath(); // 开始绘制路径
+                ctx.arc(
+                    playerPos.x * cellSize + cellSize/2, // 圆心x坐标
+                    playerPos.y * cellSize + cellSize/2, // 圆心y坐标
+                    cellSize/2 - 2, // 半径
+                    0, // 起始角度
+                    Math.PI * 2 // 结束角度（完整圆）
+                );
+                ctx.fill(); // 填充圆形
+                
+                // 绘制起点
+                ctx.fillStyle = '#FF9800'; // 橙色
+                ctx.beginPath(); // 开始绘制路径
+                ctx.arc(
+                    cellSize + cellSize/2, // 圆心x坐标（第一行第一列）
+                    cellSize + cellSize/2, // 圆心y坐标（第一行第一列）
+                    cellSize/4, // 半径
+                    0, // 起始角度
+                    Math.PI * 2 // 结束角度（完整圆）
+                );
+                ctx.fill(); // 填充圆形
+            }
+            
+            // 移动玩家函数
+            function movePlayer(dx, dy) {
+                // 计算新位置
+                const newX = playerPos.x + dx;
+                const newY = playerPos.y + dy;
+                
+                // 检查是否可移动（不是墙且在边界内）
+                if (newX >= 0 && newX < cols && newY >= 0 && newY < rows && maze[newY][newX] !== 1) {
+                    // 更新玩家位置
+                    playerPos.x = newX;
+                    playerPos.y = newY;
+                    // 增加移动次数
+                    moves++;
+                    movesElement.textContent = moves; // 更新显示
+                    
+                    // 检查是否到达终点
+                    if (maze[newY][newX] === 2) {
+                        endGame(true); // 游戏胜利
+                    }
+                    
+                    // 重新绘制迷宫
+                    drawMaze();
+                }
+            }
+            
+            // 开始游戏函数
+            function startGame() {
+                // 生成新迷宫
+                generateMaze();
+                // 重置玩家位置
+                playerPos = { x: 1, y: 1 };
+                // 重置移动次数
+                moves = 0;
+                movesElement.textContent = moves; // 更新显示
+                // 记录开始时间
+                startTime = new Date();
+                
+                // 清除之前的计时器
+                if (timerInterval) clearInterval(timerInterval);
+                
+                // 开始新计时器
+                timerInterval = setInterval(updateTimer, 1000); // 每秒更新一次
+                
+                // 隐藏游戏消息
+                gameMessage.style.display = 'none';
+                
+                // 调整画布大小
+                resizeCanvas();
+            }
+            
+            // 更新计时器函数
+            function updateTimer() {
+                // 计算经过的时间（秒）
+                const currentTime = new Date();
+                const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+                // 格式化时间
+                const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+                const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+                // 更新计时器显示
+                timerElement.textContent = `${minutes}:${seconds}`;
+            }
+            
+            // 结束游戏函数
+            function endGame(success) {
+                // 清除计时器
+                clearInterval(timerInterval);
+                
+                // 根据游戏结果设置消息
+                if (success) {
+                    messageTitle.textContent = '恭喜！';
+                    messageText.textContent = `你成功完成了迷宫！用时: ${timerElement.textContent}，移动次数: ${moves}`;
+                } else {
+                    messageTitle.textContent = '游戏结束';
+                    messageText.textContent = '再接再厉！';
+                }
+                
+                // 显示游戏消息
+                gameMessage.style.display = 'block';
+            }
+            
+            // 键盘事件监听
+            document.addEventListener('keydown', function(e) {
+                // 根据按下的方向键移动玩家
+                switch(e.key) {
+                    case 'ArrowUp': // 上方向键
+                        movePlayer(0, -1); // 向上移动
+                        break;
+                    case 'ArrowDown': // 下方向键
+                        movePlayer(0, 1); // 向下移动
+                        break;
+                    case 'ArrowLeft': // 左方向键
+                        movePlayer(-1, 0); // 向左移动
+                        break;
+                    case 'ArrowRight': // 右方向键
+                        movePlayer(1, 0); // 向右移动
+                        break;
+                }
+            });
+            
+            // 触摸控制事件监听
+            upBtn.addEventListener('click', () => movePlayer(0, -1)); // 上按钮
+            downBtn.addEventListener('click', () => movePlayer(0, 1)); // 下按钮
+            leftBtn.addEventListener('click', () => movePlayer(-1, 0)); // 左按钮
+            rightBtn.addEventListener('click', () => movePlayer(1, 0)); // 右按钮
+            
+            // 难度选择和重新开始事件监听
+            difficultySelect.addEventListener('change', startGame); // 难度改变时重新开始
+            restartBtn.addEventListener('click', startGame); // 点击重新开始按钮
+            
+            // 窗口大小变化事件监听
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 初始化游戏
+            startGame();
+        });
+    </script>
+</body>
+</html>
