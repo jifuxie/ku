@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- 设置文档元数据 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>现代简约打砖块游戏</title>
+    
+    <!-- 定义所有样式 -->
+    <style>
+        /* 重置所有元素的默认样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* 设置页面主体样式 */
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); /* 深色渐变背景 */
+            color: #e0e0e0; /* 浅灰色文字 */
+            min-height: 100vh; /* 最小高度为视口高度 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden; /* 隐藏水平溢出 */
+        }
+
+        /* 主容器样式 */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px; /* 子元素之间的间距 */
+        }
+
+        /* 游戏信息区域样式 */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            padding: 10px 15px;
+            background: rgba(30, 30, 46, 0.8); /* 半透明深色背景 */
+            border-radius: 8px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* 添加阴影效果 */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* 半透明边框 */
+        }
+
+        /* 信息项样式（标签+值） */
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 标签和值之间的间距 */
+        }
+
+        /* 信息标签样式 */
+        .info-label {
+            font-size: 0.9rem;
+            color: #a0a0c0; /* 浅蓝色文字 */
+        }
+
+        /* 信息值样式 */
+        .info-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #6a11cb; /* 紫色文字 */
+        }
+
+        /* 游戏区域样式 */
+        .game-area {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 500px; /* 设置固定高度 */
+            background: rgba(20, 20, 35, 0.9); /* 半透明深色背景 */
+            border-radius: 12px;
+            overflow: hidden; /* 隐藏溢出内容 */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* 添加阴影效果 */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* 半透明边框 */
+        }
+
+        /* 游戏画布样式 */
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block; /* 消除画布下方的间隙 */
+        }
+
+        /* 控制按钮区域样式 */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+            flex-wrap: wrap; /* 允许按钮换行 */
+            justify-content: center;
+        }
+
+        /* 按钮通用样式 */
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); /* 紫色到蓝色的渐变 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡动画 */
+            box-shadow: 0 4px 12px rgba(37, 117, 252, 0.3); /* 添加阴影效果 */
+        }
+
+        /* 按钮悬停效果 */
+        button:hover {
+            transform: translateY(-2px); /* 向上移动2像素 */
+            box-shadow: 0 6px 16px rgba(37, 117, 252, 0.4); /* 增强阴影 */
+        }
+
+        /* 按钮按下效果 */
+        button:active {
+            transform: translateY(1px); /* 向下移动1像素 */
+        }
+
+        /* 游戏说明区域样式 */
+        .instructions {
+            background: rgba(30, 30, 46, 0.8); /* 半透明深色背景 */
+            border-radius: 12px;
+            padding: 15px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 5px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* 添加阴影效果 */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* 半透明边框 */
+        }
+
+        /* 说明标题样式 */
+        .instructions h2 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #6a11cb; /* 紫色文字 */
+        }
+
+        /* 说明段落样式 */
+        .instructions p {
+            margin-bottom: 8px;
+            line-height: 1.4;
+            color: #c0c0e0; /* 浅蓝色文字 */
+            font-size: 0.9rem;
+        }
+
+        /* 移动设备控制按钮区域样式 */
+        .mobile-controls {
+            display: none; /* 默认隐藏，在移动设备上显示 */
+            width: 100%;
+            max-width: 600px;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        /* 移动设备控制按钮样式 */
+        .mobile-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%; /* 圆形按钮 */
+            background: rgba(106, 17, 203, 0.7); /* 半透明紫色背景 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            user-select: none; /* 防止文本被选中 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* 添加阴影效果 */
+        }
+
+        /* 平板电脑和手机响应式设计 */
+        @media (max-width: 768px) {
+            /* 游戏信息区域改为垂直排列 */
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+                padding: 8px 12px;
+            }
+            
+            /* 显示移动设备控制按钮 */
+            .mobile-controls {
+                display: flex;
+            }
+            
+            /* 调整游戏区域高度 */
+            .game-area {
+                height: 450px;
+            }
+        }
+
+        /* 手机响应式设计 */
+        @media (max-width: 480px) {
+            /* 调整游戏信息区域内边距 */
+            .game-info {
+                padding: 6px 10px;
+            }
+            
+            /* 调整信息值字体大小 */
+            .info-value {
+                font-size: 1.1rem;
+            }
+            
+            /* 调整按钮大小 */
+            button {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+            
+            /* 调整移动设备控制按钮大小 */
+            .mobile-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+            
+            /* 调整游戏区域高度 */
+            .game-area {
+                height: 400px;
+            }
+            
+            /* 调整说明区域内边距 */
+            .instructions {
+                padding: 12px;
+            }
+        }
+
+        /* 游戏结束和关卡完成屏幕样式 */
+        .game-over, .level-complete {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 15, 35, 0.9); /* 半透明深色背景 */
+            z-index: 10; /* 确保显示在最上层 */
+            border-radius: 12px;
+        }
+
+        /* 游戏结束和关卡完成标题样式 */
+        .game-over h2, .level-complete h2 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+        }
+
+        /* 游戏结束标题颜色 */
+        .game-over h2 {
+            color: #ff4d4d; /* 红色 */
+        }
+
+        /* 关卡完成标题颜色 */
+        .level-complete h2 {
+            color: #4dff4d; /* 绿色 */
+        }
+
+        /* 游戏结束和关卡完成段落样式 */
+        .game-over p, .level-complete p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* 隐藏类，用于隐藏元素 */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 游戏信息区域 -->
+        <div class="game-info">
+            <!-- 分数信息项 -->
+            <div class="info-item">
+                <div class="info-label">分数:</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <!-- 生命信息项 -->
+            <div class="info-item">
+                <div class="info-label">生命:</div>
+                <div class="info-value" id="lives">3</div>
+            </div>
+            <!-- 关卡信息项 -->
+            <div class="info-item">
+                <div class="info-label">关卡:</div>
+                <div class="info-value" id="level">1</div>
+            </div>
+        </div>
+        
+        <!-- 游戏区域 -->
+        <div class="game-area">
+            <!-- 游戏画布 -->
+            <canvas id="gameCanvas"></canvas>
+            
+            <!-- 游戏结束屏幕 -->
+            <div id="gameOverScreen" class="game-over hidden">
+                <h2>游戏结束</h2>
+                <p>你的最终分数: <span id="finalScore">0</span></p>
+                <button id="restartButton">重新开始</button>
+            </div>
+            
+            <!-- 关卡完成屏幕 -->
+            <div id="levelCompleteScreen" class="level-complete hidden">
+                <h2>关卡完成!</h2>
+                <p>准备进入下一关</p>
+                <button id="nextLevelButton">下一关</button>
+            </div>
+        </div>
+        
+        <!-- 控制按钮区域 -->
+        <div class="controls">
+            <button id="startButton">开始游戏</button>
+            <button id="pauseButton">暂停游戏</button>
+            <button id="resetButton">重置游戏</button>
+        </div>
+        
+        <!-- 移动设备控制按钮区域 -->
+        <div class="mobile-controls">
+            <div class="mobile-btn" id="leftBtn">←</div>
+            <div class="mobile-btn" id="rightBtn">→</div>
+        </div>
+        
+        <!-- 游戏说明区域 -->
+        <div class="instructions">
+            <h2>游戏说明</h2>
+            <p>• 使用鼠标或键盘左右方向键移动挡板</p>
+            <p>• 在移动设备上使用左右按钮控制挡板</p>
+            <p>• 击中所有砖块即可进入下一关</p>
+            <p>• 每关砖块数量和速度会增加</p>
+            <p>• 如果球掉落，你将失去一条生命</p>
+        </div>
+    </div>
+
+    <!-- JavaScript 代码 -->
+    <script>
+        // 获取Canvas元素和2D绘图上下文
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 游戏状态对象
+        let gameState = {
+            score: 0,      // 当前分数
+            lives: 3,      // 剩余生命
+            level: 1,      // 当前关卡
+            isRunning: false, // 游戏是否运行中
+            isPaused: false   // 游戏是否暂停
+        };
+
+        // 挡板对象
+        let paddle = {
+            width: 100,    // 挡板宽度
+            height: 15,    // 挡板高度
+            x: 0,          // 挡板X坐标
+            y: 0,          // 挡板Y坐标
+            speed: 18      // 挡板移动速度
+        };
+
+        // 球对象
+        let ball = {
+            x: 0,          // 球X坐标
+            y: 0,          // 球Y坐标
+            radius: 8,     // 球半径
+            speedX: 5,     // 球X轴速度
+            speedY: -5,    // 球Y轴速度
+            maxSpeed: 8    // 球最大速度
+        };
+
+        // 砖块数组
+        let bricks = [];
+        // 砖块行数和列数
+        const brickRows = 5;
+        const brickCols = 8;
+        // 砖块尺寸和间距
+        let brickWidth = 0;
+        const brickHeight = 20;
+        const brickPadding = 5;
+        const brickOffsetTop = 40;
+        let brickOffsetLeft = 0;
+
+        // 颜色配置对象
+        const colors = {
+            background: '#0f0f23', // 背景颜色
+            paddle: '#6a11cb',     // 挡板颜色
+            ball: '#2575fc',       // 球颜色
+            bricks: ['#ff4d4d', '#ffa64d', '#ffff4d', '#4dff4d', '#4dffff', '#4d4dff', '#ff4dff'] // 砖块颜色数组
+        };
+
+        // 初始化游戏函数
+        function initGame() {
+            resizeCanvas(); // 调整画布大小
+            
+            // 初始化挡板位置（居中）
+            paddle.x = (canvas.width - paddle.width) / 2;
+            paddle.y = canvas.height - paddle.height - 20;
+            
+            resetBall();    // 重置球位置
+            createBricks(); // 创建砖块
+            updateUI();     // 更新用户界面
+            draw();         // 绘制初始状态
+        }
+
+        // 创建砖块函数
+        function createBricks() {
+            bricks = []; // 清空砖块数组
+            
+            // 计算砖块宽度和偏移量
+            const availableWidth = canvas.width - 40; // 左右各留20px边距
+            brickWidth = (availableWidth - (brickCols - 1) * brickPadding) / brickCols;
+            brickOffsetLeft = (canvas.width - (brickCols * brickWidth + (brickCols - 1) * brickPadding)) / 2;
+            
+            // 创建砖块数组（行数和列数）
+            for (let r = 0; r < brickRows + gameState.level - 1; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < brickCols; c++) {
+                    // 计算每个砖块的位置
+                    const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+                    const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+                    // 创建砖块对象并添加到数组
+                    bricks[r][c] = { 
+                        x: brickX, 
+                        y: brickY, 
+                        width: brickWidth,
+                        height: brickHeight,
+                        status: 1, // 1表示砖块存在，0表示已被击中
+                        color: colors.bricks[r % colors.bricks.length] // 循环使用颜色数组
+                    };
+                }
+            }
+        }
+
+        // 重置球位置函数
+        function resetBall() {
+            // 将球放在挡板上方
+            ball.x = canvas.width / 2;
+            ball.y = paddle.y - ball.radius - 5;
+            // 随机设置球的水平方向
+            ball.speedX = 5 * (Math.random() > 0.5 ? 1 : -1);
+            ball.speedY = -5; // 向上移动
+        }
+
+        // 绘制游戏元素函数
+        function draw() {
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制背景
+            ctx.fillStyle = colors.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制挡板
+            ctx.fillStyle = colors.paddle;
+            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+            
+            // 绘制球
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = colors.ball;
+            ctx.fill();
+            ctx.closePath();
+            
+            // 绘制砖块
+            for (let r = 0; r < bricks.length; r++) {
+                for (let c = 0; c < bricks[r].length; c++) {
+                    const brick = bricks[r][c];
+                    // 只绘制状态为1（存在）的砖块
+                    if (brick.status === 1) {
+                        ctx.fillStyle = brick.color;
+                        ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+                        
+                        // 添加砖块边框
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                        ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+                    }
+                }
+            }
+        }
+
+        // 更新游戏状态函数
+        function update() {
+            // 如果游戏未运行或已暂停，则不更新
+            if (!gameState.isRunning || gameState.isPaused) return;
+            
+            // 移动球
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+            
+            // 球与墙壁碰撞检测（左右墙壁）
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.speedX = -ball.speedX; // 反转水平速度
+            }
+            
+            // 球与墙壁碰撞检测（上墙壁）
+            if (ball.y - ball.radius < 0) {
+                ball.speedY = -ball.speedY; // 反转垂直速度
+            }
+            
+            // 球与挡板碰撞检测
+            if (
+                ball.y + ball.radius > paddle.y &&
+                ball.x > paddle.x &&
+                ball.x < paddle.x + paddle.width
+            ) {
+                // 根据击中挡板的位置调整反弹角度
+                const hitPos = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                ball.speedX = hitPos * ball.maxSpeed;
+                ball.speedY = -Math.abs(ball.speedY); // 确保球向上弹起
+            }
+            
+            // 球掉落检测（底部）
+            if (ball.y + ball.radius > canvas.height) {
+                gameState.lives--; // 减少生命值
+                updateUI(); // 更新用户界面
+                
+                // 检查是否还有生命
+                if (gameState.lives <= 0) {
+                    gameOver(); // 游戏结束
+                } else {
+                    resetBall(); // 重置球位置
+                }
+            }
+            
+            // 球与砖块碰撞检测
+            for (let r = 0; r < bricks.length; r++) {
+                for (let c = 0; c < bricks[r].length; c++) {
+                    const brick = bricks[r][c];
+                    // 只检查状态为1（存在）的砖块
+                    if (brick.status === 1) {
+                        // 检测碰撞
+                        if (
+                            ball.x + ball.radius > brick.x &&
+                            ball.x - ball.radius < brick.x + brick.width &&
+                            ball.y + ball.radius > brick.y &&
+                            ball.y - ball.radius < brick.y + brick.height
+                        ) {
+                            ball.speedY = -ball.speedY; // 反转垂直速度
+                            brick.status = 0; // 标记砖块为已击中
+                            gameState.score += 10; // 增加分数
+                            updateUI(); // 更新用户界面
+                            
+                            // 检查是否所有砖块都被击中
+                            if (checkLevelComplete()) {
+                                levelComplete(); // 关卡完成
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 检查关卡是否完成函数
+        function checkLevelComplete() {
+            // 遍历所有砖块，检查是否还有未击中的砖块
+            for (let r = 0; r < bricks.length; r++) {
+                for (let c = 0; c < bricks[r].length; c++) {
+                    if (bricks[r][c].status === 1) {
+                        return false; // 还有未击中的砖块
+                    }
+                }
+            }
+            return true; // 所有砖块都已击中
+        }
+
+        // 游戏循环函数
+        function gameLoop() {
+            update(); // 更新游戏状态
+            draw();   // 绘制游戏元素
+            // 如果游戏正在运行且未暂停，则继续循环
+            if (gameState.isRunning && !gameState.isPaused) {
+                requestAnimationFrame(gameLoop); // 请求下一帧动画
+            }
+        }
+
+        // 调整Canvas大小函数
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            // 设置画布尺寸为容器尺寸
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            // 更新挡板位置（居中）
+            if (paddle) {
+                paddle.x = (canvas.width - paddle.width) / 2;
+                paddle.y = canvas.height - paddle.height - 20;
+            }
+        }
+
+        // 更新用户界面函数
+        function updateUI() {
+            // 更新分数显示
+            document.getElementById('score').textContent = gameState.score;
+            // 更新生命显示
+            document.getElementById('lives').textContent = gameState.lives;
+            // 更新关卡显示
+            document.getElementById('level').textContent = gameState.level;
+        }
+
+        // 游戏结束函数
+        function gameOver() {
+            gameState.isRunning = false; // 停止游戏
+            // 显示最终分数
+            document.getElementById('finalScore').textContent = gameState.score;
+            // 显示游戏结束屏幕
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+        }
+
+        // 关卡完成函数
+        function levelComplete() {
+            gameState.isRunning = false; // 暂停游戏
+            // 显示关卡完成屏幕
+            document.getElementById('levelCompleteScreen').classList.remove('hidden');
+        }
+
+        // 开始新关卡函数
+        function nextLevel() {
+            gameState.level++; // 增加关卡数
+            gameState.isRunning = true; // 继续游戏
+            // 隐藏关卡完成屏幕
+            document.getElementById('levelCompleteScreen').classList.add('hidden');
+            createBricks(); // 创建新砖块
+            resetBall();    // 重置球位置
+            updateUI();     // 更新用户界面
+            gameLoop();     // 开始游戏循环
+        }
+
+        // 重置游戏函数
+        function resetGame() {
+            // 重置游戏状态
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.level = 1;
+            gameState.isRunning = false;
+            gameState.isPaused = false;
+            
+            // 隐藏游戏结束和关卡完成屏幕
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('levelCompleteScreen').classList.add('hidden');
+            // 重置暂停按钮文本
+            document.getElementById('pauseButton').textContent = '暂停游戏';
+            
+            initGame(); // 重新初始化游戏
+            updateUI(); // 更新用户界面
+        }
+
+        // 设置事件监听器函数
+        function setupEventListeners() {
+            // 窗口大小变化事件
+            window.addEventListener('resize', () => {
+                resizeCanvas(); // 调整画布大小
+                createBricks(); // 重新创建砖块
+                draw();         // 重新绘制
+            });
+            
+            // 鼠标移动控制挡板事件
+            canvas.addEventListener('mousemove', (e) => {
+                // 如果游戏未运行或已暂停，则不响应
+                if (!gameState.isRunning || gameState.isPaused) return;
+                
+                // 计算鼠标在画布上的位置
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                // 设置挡板位置（跟随鼠标）
+                paddle.x = mouseX - paddle.width / 2;
+                
+                // 限制挡板不超出画布
+                if (paddle.x < 0) {
+                    paddle.x = 0;
+                } else if (paddle.x + paddle.width > canvas.width) {
+                    paddle.x = canvas.width - paddle.width;
+                }
+            });
+            
+            // 键盘控制事件
+            document.addEventListener('keydown', (e) => {
+                // 如果游戏未运行或已暂停，则不响应
+                if (!gameState.isRunning || gameState.isPaused) return;
+                
+                // 左箭头键 - 向左移动挡板
+                if (e.key === 'ArrowLeft' || e.key === 'Left') {
+                    paddle.x = Math.max(0, paddle.x - paddle.speed);
+                } 
+                // 右箭头键 - 向右移动挡板
+                else if (e.key === 'ArrowRight' || e.key === 'Right') {
+                    paddle.x = Math.min(canvas.width - paddle.width, paddle.x + paddle.speed);
+                }
+            });
+            
+            // 移动设备控制变量
+            let moveLeft = false;
+            let moveRight = false;
+            
+            // 左按钮触摸开始事件
+            document.getElementById('leftBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault(); // 阻止默认行为
+                // 如果游戏未运行或已暂停，则不响应
+                if (!gameState.isRunning || gameState.isPaused) return;
+                moveLeft = true; // 设置向左移动标志
+            });
+            
+            // 左按钮触摸结束事件
+            document.getElementById('leftBtn').addEventListener('touchend', (e) => {
+                e.preventDefault(); // 阻止默认行为
+                moveLeft = false; // 清除向左移动标志
+            });
+            
+            // 右按钮触摸开始事件
+            document.getElementById('rightBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault(); // 阻止默认行为
+                // 如果游戏未运行或已暂停，则不响应
+                if (!gameState.isRunning || gameState.isPaused) return;
+                moveRight = true; // 设置向右移动标志
+            });
+            
+            // 右按钮触摸结束事件
+            document.getElementById('rightBtn').addEventListener('touchend', (e) => {
+                e.preventDefault(); // 阻止默认行为
+                moveRight = false; // 清除向右移动标志
+            });
+            
+            // 移动设备控制循环函数
+            function mobileControlLoop() {
+                // 如果向左移动标志为真，则向左移动挡板
+                if (moveLeft) {
+                    paddle.x = Math.max(0, paddle.x - paddle.speed);
+                }
+                // 如果向右移动标志为真，则向右移动挡板
+                if (moveRight) {
+                    paddle.x = Math.min(canvas.width - paddle.width, paddle.x + paddle.speed);
+                }
+                // 继续循环
+                requestAnimationFrame(mobileControlLoop);
+            }
+            mobileControlLoop(); // 启动移动设备控制循环
+            
+            // 开始游戏按钮点击事件
+            document.getElementById('startButton').addEventListener('click', () => {
+                // 如果游戏未运行，则开始游戏
+                if (!gameState.isRunning) {
+                    gameState.isRunning = true;
+                    gameState.isPaused = false;
+                    gameLoop(); // 开始游戏循环
+                }
+            });
+            
+            // 暂停游戏按钮点击事件
+            document.getElementById('pauseButton').addEventListener('click', () => {
+                // 如果游戏正在运行，则切换暂停状态
+                if (gameState.isRunning) {
+                    gameState.isPaused = !gameState.isPaused;
+                    // 更新按钮文本
+                    document.getElementById('pauseButton').textContent = 
+                        gameState.isPaused ? '继续游戏' : '暂停游戏';
+                    // 如果取消暂停，则继续游戏循环
+                    if (!gameState.isPaused) {
+                        gameLoop();
+                    }
+                }
+            });
+            
+            // 重置游戏按钮点击事件
+            document.getElementById('resetButton').addEventListener('click', resetGame);
+            // 重新开始按钮点击事件
+            document.getElementById('restartButton').addEventListener('click', resetGame);
+            // 下一关按钮点击事件
+            document.getElementById('nextLevelButton').addEventListener('click', nextLevel);
+        }
+
+        // 页面加载完成后初始化游戏
+        window.onload = function() {
+            initGame();             // 初始化游戏
+            setupEventListeners();  // 设置事件监听器
+        };
+    </script>
+</body>
+</html>
