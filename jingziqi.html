@@ -87,6 +87,7 @@
         .game-info {
             display: flex;
             justify-content: space-between; /* 两端对齐 */
+            align-items: center; /* 垂直居中 */
             width: 100%; /* 宽度100% */
             max-width: 400px; /* 最大宽度 */
             padding: 15px 20px; /* 内边距 */
@@ -289,18 +290,39 @@
                 font-size: 2rem; /* 小屏幕标题字体大小 */
             }
             
+            /* 移动设备上的游戏模式按钮 - 保持一行显示 */
             .game-mode {
-                flex-direction: column; /* 垂直排列 */
+                flex-direction: row; /* 保持水平排列 */
+                gap: 10px; /* 减小间距 */
             }
             
+            .mode-btn {
+                padding: 10px 15px; /* 减小内边距 */
+                font-size: 0.9rem; /* 减小字体大小 */
+            }
+            
+            /* 移动设备上的游戏信息区域 - 保持一行显示 */
             .game-info {
-                flex-direction: column; /* 垂直排列 */
-                gap: 10px; /* 子元素间距 */
-                text-align: center; /* 文本居中 */
+                flex-direction: row; /* 保持水平排列 */
+                padding: 12px 15px; /* 减小内边距 */
+                gap: 10px; /* 添加间距 */
+            }
+            
+            .player-turn {
+                font-size: 1rem; /* 减小字体大小 */
+                white-space: nowrap; /* 防止换行 */
             }
             
             .score {
-                justify-content: center; /* 水平居中 */
+                gap: 15px; /* 减小分数间距 */
+            }
+            
+            .score div {
+                font-size: 0.9rem; /* 减小分数标签字体大小 */
+            }
+            
+            .score-value {
+                font-size: 1.1rem; /* 减小分数值字体大小 */
             }
             
             /* 移动设备上的游戏棋盘 */
@@ -328,6 +350,35 @@
         
         /* 超小屏幕设备 */
         @media (max-width: 350px) {
+            .game-mode {
+                gap: 8px; /* 进一步减小间距 */
+            }
+            
+            .mode-btn {
+                padding: 8px 12px; /* 进一步减小内边距 */
+                font-size: 0.85rem; /* 进一步减小字体大小 */
+            }
+            
+            .game-info {
+                padding: 10px 12px; /* 进一步减小内边距 */
+            }
+            
+            .player-turn {
+                font-size: 0.9rem; /* 进一步减小字体大小 */
+            }
+            
+            .score {
+                gap: 10px; /* 进一步减小分数间距 */
+            }
+            
+            .score div {
+                font-size: 0.8rem; /* 进一步减小分数标签字体大小 */
+            }
+            
+            .score-value {
+                font-size: 1rem; /* 进一步减小分数值字体大小 */
+            }
+            
             .game-board {
                 height: 250px; /* 超小屏幕上固定高度 */
                 max-width: 250px; /* 超小屏幕上最大宽度 */
@@ -400,6 +451,7 @@
         </div>
     </div>
     
+    <!-- 页脚 -->
     
 
     <script>
