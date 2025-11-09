@@ -1,283 +1,484 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>贪吃蛇小游戏</title>
-<style>
-body {
-margin: 0;
-padding: 0;
-display: flex;
-justify-content: center;
-align-items: center;
-height: 100vh;
-background-color: #1a1a1a;
-color: #fff;
-font-family: 'Arial', sans-serif;
-overflow: hidden;
-}
-.game-container {
-text-align: center;
-background-color: #2d2d2d;
-padding: 20px;
-border-radius: 10px;
-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-max-width: 400px;
-width: 100%;
-}
-canvas {
-display: block;
-margin: 0 auto;
-border: 2px solid #444;
-background-color: #000;
-max-width: 100%;
-height: auto;
-}
-.score-container {
-display: flex;
-justify-content: space-between;
-margin-top: 10px;
-font-size: 20px;
-color: #ffcc00;
-}
-.score, .high-score {
-margin: 0 10px;
-}
-.button-disk {
-position: relative;
-width: 200px;
-height: 200px;
-margin: 20px auto;
-}
-.outer-circle {
-position: absolute;
-width: 100%;
-height: 100%;
-border-radius: 50%;
-background-color: #444;
-display: flex;
-justify-content: center;
-align-items: center;
-}
-.inner-circle {
-width: 80px;
-height: 80px;
-border-radius: 50%;
-background-color: #00cc66;
-display: flex;
-justify-content: center;
-align-items: center;
-font-size: 16px;
-color: #fff;
-cursor: pointer;
-transition: background-color 0.3s ease;
-z-index: 2;
-}
-.inner-circle:hover {
-background-color: #00b359;
-}
-.inner-circle:active {
-background-color: #00994d;
-}
-.direction-sector {
-position: absolute;
-width: 100%;
-height: 100%;
-border-radius: 50%;
-clip-path: polygon(50% 50%, 100% 0, 100% 100%);
-background-color: rgba(255, 255, 255, 0.1);
-cursor: pointer;
-transition: background-color 0.3s ease;
-}
-.direction-sector:hover {
-background-color: rgba(255, 255, 255, 0.2);
-}
-#up {
-clip-path: polygon(50% 50%, 100% 0, 0 0);
-transform: rotate(0deg);
-}
-#down {
-clip-path: polygon(50% 50%, 100% 100%, 0 100%);
-transform: rotate(0deg);
-}
-#left {
-clip-path: polygon(50% 50%, 0 0, 0 100%);
-transform: rotate(0deg);
-}
-#right {
-clip-path: polygon(50% 50%, 100% 0, 100% 100%);
-transform: rotate(0deg);
-}
-</style>
+    <!-- 设置文档字符编码 -->
+    <meta charset="UTF-8">
+    <!-- 设置视口，确保在不同设备上正确显示 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 设置页面标题 -->
+    <title>小游戏导航网站</title>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 页面内嵌样式 -->
+    <style>
+        /* 重置所有元素的默认边距和内边距，并设置盒模型为border-box */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* 设置全局字体 */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* 定义CSS变量，方便统一修改颜色方案 */
+        :root {
+            --primary-color: #1a1a2e;      /* 主背景色 - 深蓝色 */
+            --secondary-color: #16213e;    /* 次背景色 - 更深的蓝色 */
+            --accent-color: #0f8bf1;       /* 强调色 - 亮蓝色 */
+            --text-color: #e6e6e6;         /* 文本颜色 - 浅灰色 */
+            --card-bg: #2a2a4a;            /* 卡片背景色 - 紫色调深色 */
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);  /* 常规阴影效果 */
+            --hover-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);  /* 悬停时的阴影效果 */
+        }
+
+        /* 设置页面主体样式 */
+        body {
+            /* 使用渐变背景，从主背景色到次背景色 */
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            /* 设置文字颜色 */
+            color: var(--text-color);
+            /* 设置最小高度为视口高度 */
+            min-height: 100vh;
+            /* 设置行高，提高可读性 */
+            line-height: 1.6;
+        }
+
+        /* 顶部导航栏样式 */
+        .top-nav {
+            /* 设置背景色，使用rgba带透明度 */
+            background-color: rgba(26, 26, 46, 0.9);
+            /* 设置内边距：上下1rem，左右2rem */
+            padding: 1rem 2rem;
+            /* 使用flex布局，子元素水平排列 */
+            display: flex;
+            /* 子元素在主轴两端对齐 */
+            justify-content: space-between;
+            /* 子元素在交叉轴居中对齐 */
+            align-items: center;
+            /* 添加阴影效果 */
+            box-shadow: var(--shadow);
+            /* 设置粘性定位，滚动时保持在顶部 */
+            position: sticky;
+            top: 0;
+            /* 设置较高的z-index，确保在其他元素上方 */
+            z-index: 100;
+            /* 添加背景模糊效果 */
+            backdrop-filter: blur(10px);
+        }
+
+        /* 网站Logo样式 */
+        .logo {
+            /* 使用flex布局 */
+            display: flex;
+            /* 子元素垂直居中对齐 */
+            align-items: center;
+            /* 设置子元素之间的间距 */
+            gap: 10px;
+            /* 设置字体大小 */
+            font-size: 1.5rem;
+            /* 设置字体粗细 */
+            font-weight: 700;
+        }
+
+        /* Logo图标颜色 */
+        .logo i {
+            /* 使用强调色 */
+            color: var(--accent-color);
+        }
+
+        /* 主导航链接容器样式 */
+        .nav-links {
+            /* 使用flex布局 */
+            display: flex;
+            /* 设置子元素之间的间距 */
+            gap: 1.5rem;
+        }
+
+        /* 导航链接样式 */
+        .nav-links a {
+            /* 设置文字颜色 */
+            color: var(--text-color);
+            /* 去除下划线 */
+            text-decoration: none;
+            /* 设置内边距 */
+            padding: 0.5rem 1rem;
+            /* 设置圆角 */
+            border-radius: 4px;
+            /* 添加过渡效果，持续0.3秒，缓动函数为ease */
+            transition: all 0.3s ease;
+        }
+
+        /* 导航链接悬停效果 */
+        .nav-links a:hover {
+            /* 悬停时改变背景色 */
+            background-color: rgba(255, 255, 255, 0.1);
+            /* 悬停时改变文字颜色 */
+            color: var(--accent-color);
+        }
+
+        /* 主内容区域样式 */
+        .main-content {
+            /* 设置内边距 */
+            padding: 2rem;
+            /* 设置最大宽度 */
+            max-width: 1400px;
+            /* 水平居中 */
+            margin: 0 auto;
+        }
+
+        /* 页面标题区域样式 */
+        .page-header {
+            /* 设置底部外边距 */
+            margin-bottom: 3rem;
+            /* 文本居中对齐 */
+            text-align: center;
+        }
+
+        /* 主标题样式 */
+        .page-title {
+            /* 设置字体大小 */
+            font-size: 2.5rem;
+            /* 设置底部外边距 */
+            margin-bottom: 0.5rem;
+            /* 设置渐变背景 */
+            background: linear-gradient(90deg, var(--accent-color), #74b9ff);
+            /* 将背景裁剪为文字形状（仅Webkit浏览器） */
+            -webkit-background-clip: text;
+            /* 设置文字颜色为透明，以显示背景渐变 */
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 副标题样式 */
+        .page-subtitle {
+            /* 设置文字颜色 */
+            color: #b0b0b0;
+            /* 设置字体大小 */
+            font-size: 1.1rem;
+            /* 设置最大宽度 */
+            max-width: 600px;
+            /* 水平居中 */
+            margin: 0 auto;
+        }
+
+        /* 卡片容器网格布局 */
+        .cards-container {
+            /* 使用网格布局 */
+            display: grid;
+            /* 设置列：自动填充，最小300px，最大1fr */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            /* 设置网格项之间的间距 */
+            gap: 1.5rem;
+        }
+
+        /* 卡片样式 */
+        .card {
+            /* 设置背景色 */
+            background-color: var(--card-bg);
+            /* 设置圆角 */
+            border-radius: 10px;
+            /* 设置内边距 */
+            padding: 1.5rem;
+            /* 添加阴影效果 */
+            box-shadow: var(--shadow);
+            /* 添加过渡效果 */
+            transition: all 0.3s ease;
+            /* 设置高度为100% */
+            height: 100%;
+            /* 使用flex布局，垂直排列 */
+            display: flex;
+            flex-direction: column;
+            /* 去除链接下划线 */
+            text-decoration: none;
+            /* 继承文字颜色 */
+            color: inherit;
+        }
+
+        /* 卡片悬停效果 */
+        .card:hover {
+            /* 悬停时向上移动5px */
+            transform: translateY(-5px);
+            /* 悬停时改变阴影效果 */
+            box-shadow: var(--hover-shadow);
+        }
+
+        /* 卡片头部样式 */
+        .card-header {
+            /* 使用flex布局 */
+            display: flex;
+            /* 子元素垂直居中对齐 */
+            align-items: center;
+            /* 设置子元素之间的间距 */
+            gap: 15px;
+            /* 设置底部外边距 */
+            margin-bottom: 1rem;
+        }
+
+        /* 卡片图标样式 */
+        .card-icon {
+            /* 设置宽度和高度 */
+            width: 50px;
+            height: 50px;
+            /* 设置圆角 */
+            border-radius: 10px;
+            /* 设置背景色 */
+            background-color: var(--accent-color);
+            /* 使用flex布局，内容居中 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* 设置字体大小 */
+            font-size: 1.5rem;
+        }
+
+        /* 卡片标题样式 */
+        .card-title {
+            /* 设置字体大小 */
+            font-size: 1.3rem;
+            /* 设置字体粗细 */
+            font-weight: 600;
+        }
+
+        /* 卡片内容样式 */
+        .card-content {
+            /* 设置文字颜色 */
+            color: #b0b0b0;
+            /* 设置行高 */
+            line-height: 1.6;
+            /* 允许元素在flex容器中伸展，占满剩余空间 */
+            flex-grow: 1;
+        }
+
+        /* 卡片底部链接样式 */
+        .card-link {
+            /* 设置顶部外边距 */
+            margin-top: 1rem;
+            /* 设置文字颜色 */
+            color: var(--accent-color);
+            /* 设置字体粗细 */
+            font-weight: 500;
+            /* 使用flex布局 */
+            display: flex;
+            /* 子元素垂直居中对齐 */
+            align-items: center;
+            /* 设置子元素之间的间距 */
+            gap: 5px;
+            /* 添加过渡效果 */
+            transition: gap 0.3s ease;
+        }
+
+        /* 卡片链接悬停效果 */
+        .card:hover .card-link {
+            /* 悬停时增加间距 */
+            gap: 10px;
+        }
+
+        /* 响应式设计 - 平板设备 (屏幕宽度小于等于1024px) */
+        @media (max-width: 1024px) {
+            .cards-container {
+                /* 改为两列布局 */
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* 响应式设计 - 移动设备 (屏幕宽度小于等于768px) */
+        @media (max-width: 768px) {
+            .top-nav {
+                /* 调整内边距 */
+                padding: 1rem;
+                /* 改为垂直排列 */
+                flex-direction: column;
+                /* 设置子元素之间的间距 */
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                /* 减小子元素之间的间距 */
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                /* 调整内边距 */
+                padding: 1.5rem;
+            }
+            
+            .page-title {
+                /* 减小字体大小 */
+                font-size: 2rem;
+            }
+            
+            .cards-container {
+                /* 改为单列布局 */
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="game-container">
-<canvas id="gameCanvas"></canvas>
-<div class="score-container">
-<div class="score">分数: <span id="score">0</span></div>
-<div class="high-score">历史最高分: <span id="highScore">0</span></div>
-</div>
-<div class="button-disk">
-<div class="outer-circle">
-<div class="inner-circle" id="startPauseButton">开始</div>
-<div class="direction-sector" id="up"></div>
-<div class="direction-sector" id="down"></div>
-<div class="direction-sector" id="left"></div>
-<div class="direction-sector" id="right"></div>
-</div>
-</div>
-</div>
+    <!-- 顶部导航栏 -->
+    <nav class="top-nav">
+        <!-- Logo区域 -->
+        <div class="logo">
+            <!-- Logo图标 -->
+            <i class="fas fa-gamepad"></i>
+            <!-- Logo文字 -->
+            <span>小游戏</span>
+        </div>
+        <!-- 导航链接区域 -->
+        <div class="nav-links">
+            <!-- 首页链接 -->
+            <a href="#"><i class="fas fa-home"></i> 首页</a>
+            
+        </div>
+    </nav>
 
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const scoreElement = document.getElementById('score');
-const highScoreElement = document.getElementById('highScore');
-const startPauseButton = document.getElementById('startPauseButton');
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 页面标题区域 -->
+        <div class="page-header">
+            <!-- 主标题 -->
+            <h1 class="page-title"></h1>
+            <!-- 副标题 -->
+            <p class="page-subtitle"></p>
+        </div>
 
-// 设置画布大小
-const gridSize = 20;
-const tileCount = 20;
-canvas.width = gridSize * tileCount;
-canvas.height = gridSize * tileCount;
+        <!-- 卡片容器 -->
+        <div class="cards-container">
+            <!-- 卡片1 - 贪吃蛇 -->
+            <a href="./snake.html" class="card">
+                <!-- 卡片头部 -->
+                <div class="card-header">
+                    <!-- 卡片图标 -->
+                    <div class="card-icon">
+                         <i class="fas fa-dragon"></i>
+                    </div>
+                    <!-- 卡片标题 -->
+                    <h3 class="card-title">贪吃蛇</h3>
+                </div>
+                <!-- 卡片内容 -->
+                <p class="card-content">采用深色主题和简约风格的贪吃蛇小游戏，控制按键采用圆盘设计，既有现代感又有怀旧感。</p>
+                <!-- 卡片底部链接 -->
+                <div class="card-link">开始游戏 <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-let snake = [{ x: 10, y: 10 }];
-let food = { x: -1, y: -1 }; // 初始食物位置隐藏
-let direction = { x: 0, y: 0 };
-let score = 0;
-let highScore = localStorage.getItem('highScore') || 0;
-highScoreElement.textContent = highScore;
-let gameStarted = false;
-let gamePaused = false;
+            <!-- 卡片2 - 俄罗斯方块-->
+            <a href="./fangkuai.html" class="card">
+                <!-- 卡片头部 -->
+                <div class="card-header">
+                    <!-- 卡片图标 -->
+                    <div class="card-icon">
+                        <i class="fa fa-cubes"></i>
+                    </div>
+                    <!-- 卡片标题 -->
+                    <h3 class="card-title">俄罗斯方块</h3>
+                </div>
+                <!-- 卡片内容 -->
+                <p class="card-content">使用 ← → 键移动方块，使用 ↑ 键旋转方块，使用 ↓ 键加速下落，空格键直接落底，在移动设备上可以使用屏幕按钮控制。</p>
+                <!-- 卡片底部链接 -->
+                <div class="card-link">开始游戏 <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-function gameLoop() {
-if (!gameStarted || gamePaused) return; // 如果游戏未开始或暂停，不执行游戏逻辑
+            <!-- 卡片3 - 打砖块 -->
+            <a href="#" class="card">
+                <!-- 卡片头部 -->
+                <div class="card-header">
+                    <!-- 卡片图标 -->
+                    <div class="card-icon">
+                        <i class="fas fa-th"></i>
+                    </div>
+                    <!-- 卡片标题 -->
+                    <h3 class="card-title">打砖块</h3>
+                </div>
+                <!-- 卡片内容 -->
+                <p class="card-content">使用鼠标或键盘左右方向键移动挡板，在移动设备上使用左右按钮控制挡板。</p>
+                <!-- 卡片底部链接 -->
+                <div class="card-link">开始游戏  <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-update();
-draw();
-setTimeout(gameLoop, 200);
-}
+            <!-- 卡片4 - 迷宫 -->
+            <a href="./migong.html" class="card">
+                <!-- 卡片头部 -->
+                <div class="card-header">
+                    <!-- 卡片图标 -->
+                    <div class="card-icon">
+                        <i class="fas fa-dungeon"></i>
+                    </div>
+                    <!-- 卡片标题 -->
+                    <h3 class="card-title">迷宫</h3>
+                </div>
+                <!-- 卡片内容 -->
+                <p class="card-content">使用方向键或屏幕上的按钮移动。找到通往绿色终点的路径！</p>
+                <!-- 卡片底部链接 -->
+                <div class="card-link">开始游戏  <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-function update() {
-const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+            <!-- 卡片5 - 五子棋 -->
+            <a href="./wuziqi.html" class="card">
+                <!-- 卡片头部 -->
+                <div class="card-header">
+                    <!-- 卡片图标 -->
+                    <div class="card-icon">
+                        <i class="fas fa-chess-board"></i>
+                    </div>
+                    <!-- 卡片标题 -->
+                    <h3 class="card-title">五子棋</h3>
+                </div>
+                <!-- 卡片内容 -->
+                <p class="card-content"> 黑方先行，双方轮流在棋盘上放置棋子，任意一方在横、竖或斜方向连成五子即获胜。</p>
+                <!-- 卡片底部链接 -->
+                <div class="card-link">开始游戏  <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-// 检查是否撞墙或撞到自己
-if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-resetGame();
-return;
-}
+            <!-- 卡片6 - Flappy Bird -->
+            <a href="./FB.html" class="card">
+                <!-- 卡片头部 -->
+                <div class="card-header">
+                    <!-- 卡片图标 -->
+                    <div class="card-icon">
+                        <i class="fas fa-dove"></i>
+                    </div>
+                    <!-- 卡片标题 -->
+                    <h3 class="card-title">Flappy Bird</h3>
+                </div>
+                <!-- 卡片内容 -->
+                <p class="card-content">点击屏幕、按空格键或点击"点击飞行"按钮使小鸟向上飞，通过管道之间的空隙获得分数，碰到管道或地面游戏结束。</p>
+                <!-- 卡片底部链接 -->
+                <div class="card-link">开始游戏  <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-snake.unshift(head);
+            <!-- 卡片7 - 扫雷 -->
+            <a href="./saolei.html" class="card">
+                <!-- 卡片头部 -->
+                <div class="card-header">
+                    <!-- 卡片图标 -->
+                    <div class="card-icon">
+                        <i class="fa fa-bomb"></i>
+                    </div>
+                    <!-- 卡片标题 -->
+                    <h3 class="card-title">扫雷</h3>
+                </div>
+                <!-- 卡片内容 -->
+                <p class="card-content">数字表示周围8个格子中的地雷数量，标记出所有地雷并揭开所有安全格子即可获胜。</p>
+                <!-- 卡片底部链接 -->
+                <div class="card-link">开始游戏  <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-// 检查是否吃到食物
-if (head.x === food.x && head.y === food.y) {
-score++;
-scoreElement.textContent = score;
-placeFood();
-}else {
-snake.pop();
-}
-}
-
-function draw() {
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-// 绘制蛇身
-ctx.fillStyle = '#00cc66'; // 蛇身颜色
-snake.slice(1).forEach(segment => ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize));
-
-// 绘制蛇头
-if (snake.length > 0) {
-ctx.fillStyle = '#ffcc00'; // 蛇头颜色
-ctx.fillRect(snake[0].x * gridSize, snake[0].y * gridSize, gridSize, gridSize);
-}
-
-// 绘制食物
-if (food.x !== -1 && food.y !== -1) {
-ctx.fillStyle = '#ff4444';
-ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
-}
-}
-
-function placeFood() {
-food.x = Math.floor(Math.random() * tileCount);
-food.y = Math.floor(Math.random() * tileCount);
-
-// 确保食物不会生成在蛇身上
-if (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
-placeFood();
-}
-}
-
-function resetGame() {
-if (score > highScore) {
-highScore = score;
-localStorage.setItem('highScore', highScore);
-highScoreElement.textContent = highScore;
-}
-snake = [{ x: 10, y: 10 }];
-direction = { x: 0, y: 0 };
-score = 0;
-scoreElement.textContent = score;
-food = { x: -1, y: -1 }; // 隐藏食物
-gameStarted = false;
-gamePaused = false;
-startPauseButton.textContent = '开始';
-}
-
-// 键盘控制
-window.addEventListener('keydown', e => {
-if (!gameStarted || gamePaused) return; // 如果游戏未开始或暂停，不响应键盘事件
-
-switch (e.key) {
-case 'ArrowUp':
-if (direction.y === 0) direction = { x: 0, y: -1 };
-break;
-case 'ArrowDown':
-if (direction.y === 0) direction = { x: 0, y: 1 };
-break;
-case 'ArrowLeft':
-if (direction.x === 0) direction = { x: -1, y: 0 };
-break;
-case 'ArrowRight':
-if (direction.x === 0) direction = { x: 1, y: 0 };
-break;
-}
-});
-
-// 方向扇形按钮控制
-document.getElementById('up').addEventListener('click', () => {
-if (direction.y === 0) direction = { x: 0, y: -1 };
-});
-document.getElementById('down').addEventListener('click', () => {
-if (direction.y === 0) direction = { x: 0, y: 1 };
-});
-document.getElementById('left').addEventListener('click', () => {
-if (direction.x === 0) direction = { x: -1, y: 0 };
-});
-document.getElementById('right').addEventListener('click', () => {
-if (direction.x === 0) direction = { x: 1, y: 0 };
-});
-
-// 开始/暂停按钮
-startPauseButton.addEventListener('click', () => {
-if (!gameStarted) {
-gameStarted = true;
-gamePaused = false;
-startPauseButton.textContent = '暂停';
-placeFood(); // 生成食物
-direction = { x: 1, y: 0 }; // 初始方向向右
-gameLoop(); // 开始游戏循环
-}else {
-gamePaused = !gamePaused;
-startPauseButton.textContent = gamePaused ? '继续' : '暂停';
-if (!gamePaused) gameLoop(); // 如果点击“继续”，重新启动游戏循环
-}
-});
-
-// 初始化
-resetGame();
-</script>
+            <!-- 卡片8 - 井字棋 -->
+            <a href="./jingziqi.html" class="card">
+                <!-- 卡片头部 -->
+                <div class="card-header">
+                    <!-- 卡片图标 -->
+                    <div class="card-icon">
+                        <i class="fa fa-times-circle"></i>
+                    </div>
+                    <!-- 卡片标题 -->
+                    <h3 class="card-title">井字棋</h3>
+                </div>
+                <!-- 卡片内容 -->
+                <p class="card-content">游戏了设计单人模式和双人模式，玩家在3X3的棋盘里横、竖或斜线先连成一线即可获胜。</p>
+                <!-- 卡片底部链接 -->
+                <div class="card-link">开始游戏  <i class="fas fa-arrow-right"></i></div>
+            </a>
+        </div>
+    </main>
 </body>
 </html>
