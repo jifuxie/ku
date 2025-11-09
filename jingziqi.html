@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字棋</title>
+    <style>
+        /* 重置默认样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        /* 页面主体样式 */
+        body {
+            background-color: #121212; /* 深色背景 */
+            color: #e0e0e0; /* 浅色文字 */
+            min-height: 100vh; /* 最小高度为视口高度 */
+            display: flex;
+            flex-direction: column; /* 垂直排列 */
+            align-items: center; /* 水平居中 */
+            justify-content: center; /* 垂直居中 */
+            padding: 20px; /* 内边距 */
+            transition: background-color 0.3s; /* 背景色过渡效果 */
+        }
+        
+        /* 主容器 */
+        .container {
+            max-width: 500px; /* 最大宽度 */
+            width: 100%; /* 宽度100% */
+            display: flex;
+            flex-direction: column; /* 垂直排列 */
+            align-items: center; /* 水平居中 */
+            gap: 25px; /* 子元素间距 */
+        }
+        
+        /* 头部标题 */
+        header {
+            text-align: center; /* 文本居中 */
+            margin-bottom: 10px; /* 底部外边距 */
+        }
+        
+        /* 主标题 */
+        h1 {
+            font-size: 2.5rem; /* 字体大小 */
+            font-weight: 300; /* 字体粗细 */
+            margin-bottom: 10px; /* 底部外边距 */
+            color: #ffffff; /* 白色文字 */
+            letter-spacing: 2px; /* 字母间距 */
+        }
+        
+        /* 游戏模式选择区域 */
+        .game-mode {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            border: 2px solid #424242;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .mode-btn.active {
+            background-color: #64b5f6;
+            color: #121212;
+            border-color: #64b5f6;
+        }
+        
+        .mode-btn:hover:not(.active) {
+            background-color: #2d2d2d;
+            border-color: #64b5f6;
+        }
+        
+        /* 游戏信息区域 */
+        .game-info {
+            display: flex;
+            justify-content: space-between; /* 两端对齐 */
+            width: 100%; /* 宽度100% */
+            max-width: 400px; /* 最大宽度 */
+            padding: 15px 20px; /* 内边距 */
+            background-color: #1e1e1e; /* 深灰色背景 */
+            border-radius: 12px; /* 圆角 */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* 阴影效果 */
+        }
+        
+        /* 玩家回合显示 */
+        .player-turn {
+            font-size: 1.2rem; /* 字体大小 */
+            font-weight: 500; /* 字体粗细 */
+        }
+        
+        /* 当前玩家高亮 */
+        .current-player {
+            color: #64b5f6; /* 蓝色高亮 */
+            font-weight: 600; /* 字体粗细 */
+        }
+        
+        /* 分数显示区域 */
+        .score {
+            display: flex; /* 弹性布局 */
+            gap: 20px; /* 子元素间距 */
+        }
+        
+        /* 分数项 */
+        .score div {
+            text-align: center; /* 文本居中 */
+        }
+        
+        /* 分数值样式 */
+        .score-value {
+            font-size: 1.3rem; /* 字体大小 */
+            font-weight: 600; /* 字体粗细 */
+        }
+        
+        /* 游戏棋盘 */
+        .game-board {
+            display: grid; /* 网格布局 */
+            grid-template-columns: repeat(3, 1fr); /* 3列等宽 */
+            grid-gap: 10px; /* 网格间距 */
+            width: 100%; /* 宽度100% */
+            max-width: 400px; /* 最大宽度 */
+            aspect-ratio: 1 / 1; /* 宽高比1:1 */
+            background-color: #1e1e1e; /* 深灰色背景 */
+            padding: 15px; /* 内边距 */
+            border-radius: 12px; /* 圆角 */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* 阴影效果 */
+        }
+        
+        /* 棋盘单元格 */
+        .cell {
+            background-color: #2d2d2d; /* 单元格背景色 */
+            border-radius: 8px; /* 圆角 */
+            display: flex;
+            align-items: center; /* 垂直居中 */
+            justify-content: center; /* 水平居中 */
+            font-size: 3rem; /* 字体大小 */
+            font-weight: bold; /* 字体粗细 */
+            cursor: pointer; /* 鼠标指针 */
+            transition: all 0.2s ease; /* 过渡效果 */
+            aspect-ratio: 1 / 1; /* 宽高比1:1 */
+        }
+        
+        /* 单元格悬停效果 */
+        .cell:hover {
+            background-color: #383838; /* 悬停时背景色 */
+            transform: scale(1.03); /* 悬停时放大 */
+        }
+        
+        /* X玩家样式 */
+        .cell.x {
+            color: #64b5f6; /* 蓝色 */
+        }
+        
+        /* O玩家样式 */
+        .cell.o {
+            color: #ff8a65; /* 橙色 */
+        }
+        
+        /* 获胜单元格样式 */
+        .winning-cell {
+            background-color: rgba(100, 181, 246, 0.2); /* 半透明蓝色背景 */
+            animation: pulse 1.5s infinite; /* 脉动动画 */
+        }
+        
+        /* 脉动动画定义 */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(100, 181, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(100, 181, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(100, 181, 246, 0); }
+        }
+        
+        /* 控制按钮区域 */
+        .controls {
+            display: flex; /* 弹性布局 */
+            gap: 15px; /* 子元素间距 */
+            width: 100%; /* 宽度100% */
+            max-width: 400px; /* 最大宽度 */
+        }
+        
+        /* 按钮通用样式 */
+        button {
+            flex: 1; /* 等分空间 */
+            padding: 12px 20px; /* 内边距 */
+            border: none; /* 无边框 */
+            border-radius: 8px; /* 圆角 */
+            font-size: 1rem; /* 字体大小 */
+            font-weight: 500; /* 字体粗细 */
+            cursor: pointer; /* 鼠标指针 */
+            transition: all 0.2s ease; /* 过渡效果 */
+        }
+        
+        /* 重新开始按钮 */
+        #restart {
+            background-color: #64b5f6; /* 蓝色背景 */
+            color: #121212; /* 深色文字 */
+        }
+        
+        /* 重新开始按钮悬停效果 */
+        #restart:hover {
+            background-color: #42a5f5; /* 悬停时背景色 */
+            transform: translateY(-2px); /* 悬停时上移 */
+        }
+        
+        /* 重置分数按钮 */
+        #reset-score {
+            background-color: #424242; /* 深灰色背景 */
+            color: #e0e0e0; /* 浅色文字 */
+        }
+        
+        /* 重置分数按钮悬停效果 */
+        #reset-score:hover {
+            background-color: #616161; /* 悬停时背景色 */
+            transform: translateY(-2px); /* 悬停时上移 */
+        }
+        
+        /* 模态框（游戏结果弹窗） */
+        .modal {
+            display: none; /* 默认隐藏 */
+            position: fixed; /* 固定定位 */
+            top: 0; /* 顶部对齐 */
+            left: 0; /* 左侧对齐 */
+            width: 100%; /* 宽度100% */
+            height: 100%; /* 高度100% */
+            background-color: rgba(0, 0, 0, 0.7); /* 半透明黑色背景 */
+            z-index: 100; /* 层级 */
+            align-items: center; /* 垂直居中 */
+            justify-content: center; /* 水平居中 */
+        }
+        
+        /* 模态框内容 */
+        .modal-content {
+            background-color: #1e1e1e; /* 深灰色背景 */
+            padding: 30px; /* 内边距 */
+            border-radius: 12px; /* 圆角 */
+            text-align: center; /* 文本居中 */
+            max-width: 90%; /* 最大宽度90% */
+            width: 400px; /* 宽度 */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* 阴影效果 */
+        }
+        
+        /* 模态框标题 */
+        .modal h2 {
+            font-size: 2rem; /* 字体大小 */
+            margin-bottom: 15px; /* 底部外边距 */
+            color: #ffffff; /* 白色文字 */
+        }
+        
+        /* 模态框消息 */
+        .modal p {
+            font-size: 1.2rem; /* 字体大小 */
+            margin-bottom: 25px; /* 底部外边距 */
+        }
+        
+        /* 模态框按钮 */
+        .modal button {
+            background-color: #64b5f6; /* 蓝色背景 */
+            color: #121212; /* 深色文字 */
+            padding: 12px 30px; /* 内边距 */
+            font-size: 1.1rem; /* 字体大小 */
+        }
+        
+        /* 模态框按钮悬停效果 */
+        .modal button:hover {
+            background-color: #42a5f5; /* 悬停时背景色 */
+        }
+        
+        /* 页脚 */
+        footer {
+            margin-top: 30px; /* 顶部外边距 */
+            text-align: center; /* 文本居中 */
+            color: #757575; /* 灰色文字 */
+            font-size: 0.9rem; /* 字体大小 */
+        }
+        
+        /* 响应式设计 - 小屏幕设备 */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem; /* 小屏幕标题字体大小 */
+            }
+            
+            .game-mode {
+                flex-direction: column; /* 垂直排列 */
+            }
+            
+            .game-info {
+                flex-direction: column; /* 垂直排列 */
+                gap: 10px; /* 子元素间距 */
+                text-align: center; /* 文本居中 */
+            }
+            
+            .score {
+                justify-content: center; /* 水平居中 */
+            }
+            
+            .cell {
+                font-size: 2.5rem; /* 小屏幕单元格字体大小 */
+            }
+            
+            .controls {
+                flex-direction: column; /* 垂直排列 */
+            }
+            
+            .modal-content {
+                padding: 20px; /* 小屏幕模态框内边距 */
+            }
+            
+            .modal h2 {
+                font-size: 1.7rem; /* 小屏幕模态框标题字体大小 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 头部区域 -->
+        <header>
+            <h1></h1>
+        </header>
+        
+        <!-- 游戏模式选择 -->
+        <div class="game-mode">
+            <button class="mode-btn active" id="two-player-mode">双人模式</button>
+            <button class="mode-btn" id="single-player-mode">单人模式</button>
+        </div>
+        
+        <!-- 游戏信息区域 -->
+        <div class="game-info">
+            <!-- 当前玩家信息 -->
+            <div class="player-turn">
+                当前玩家: <span class="current-player" id="current-player">X</span>
+            </div>
+            <!-- 分数显示 -->
+            <div class="score">
+                <div>
+                    <div>X 得分</div>
+                    <div class="score-value" id="score-x">0</div>
+                </div>
+                <div>
+                    <div>O 得分</div>
+                    <div class="score-value" id="score-o">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 游戏棋盘 -->
+        <div class="game-board" id="game-board">
+            <!-- 棋盘单元格，共9个 -->
+            <div class="cell" data-cell-index="0"></div>
+            <div class="cell" data-cell-index="1"></div>
+            <div class="cell" data-cell-index="2"></div>
+            <div class="cell" data-cell-index="3"></div>
+            <div class="cell" data-cell-index="4"></div>
+            <div class="cell" data-cell-index="5"></div>
+            <div class="cell" data-cell-index="6"></div>
+            <div class="cell" data-cell-index="7"></div>
+            <div class="cell" data-cell-index="8"></div>
+        </div>
+        
+        <!-- 控制按钮区域 -->
+        <div class="controls">
+            <button id="restart">重新开始</button>
+            <button id="reset-score">重置分数</button>
+        </div>
+    </div>
+    
+    <!-- 游戏结果模态框 -->
+    <div class="modal" id="game-result-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">游戏结束</h2>
+            <p id="modal-message">玩家 X 获胜!</p>
+            <button id="modal-button">再来一局</button>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer>
+        <p></p>
+    </footer>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', () => {
+            // 游戏状态对象
+            const gameState = {
+                board: ['', '', '', '', '', '', '', '', ''], // 棋盘状态数组
+                currentPlayer: 'X', // 当前玩家
+                gameActive: true, // 游戏是否进行中
+                isSinglePlayer: false, // 是否为单人模式
+                score: { // 玩家得分
+                    X: 0,
+                    O: 0
+                }
+            };
+
+            // DOM元素引用
+            const cells = document.querySelectorAll('.cell'); // 所有棋盘单元格
+            const currentPlayerElement = document.getElementById('current-player'); // 当前玩家显示元素
+            const scoreXElement = document.getElementById('score-x'); // X玩家分数显示元素
+            const scoreOElement = document.getElementById('score-o'); // O玩家分数显示元素
+            const restartButton = document.getElementById('restart'); // 重新开始按钮
+            const resetScoreButton = document.getElementById('reset-score'); // 重置分数按钮
+            const gameResultModal = document.getElementById('game-result-modal'); // 游戏结果模态框
+            const modalTitle = document.getElementById('modal-title'); // 模态框标题
+            const modalMessage = document.getElementById('modal-message'); // 模态框消息
+            const modalButton = document.getElementById('modal-button'); // 模态框按钮
+            const twoPlayerModeBtn = document.getElementById('two-player-mode'); // 双人模式按钮
+            const singlePlayerModeBtn = document.getElementById('single-player-mode'); // 单人模式按钮
+
+            // 获胜条件数组
+            const winningConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // 横线
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // 竖线
+                [0, 4, 8], [2, 4, 6]             // 对角线
+            ];
+
+            // 初始化游戏
+            function initGame() {
+                // 重置棋盘状态
+                gameState.board = ['', '', '', '', '', '', '', '', ''];
+                // 设置游戏为进行中
+                gameState.gameActive = true;
+                // 重置当前玩家为X
+                gameState.currentPlayer = 'X';
+                // 更新当前玩家显示
+                currentPlayerElement.textContent = gameState.currentPlayer;
+                
+                // 重置所有单元格
+                cells.forEach(cell => {
+                    cell.textContent = ''; // 清空文本
+                    cell.classList.remove('x', 'o', 'winning-cell'); // 移除样式类
+                });
+                
+                // 隐藏模态框
+                gameResultModal.style.display = 'none';
+                
+                // 如果是单人模式且电脑先手，则电脑立即移动
+                if (gameState.isSinglePlayer && gameState.currentPlayer === 'O') {
+                    computerMove();
+                }
+            }
+
+            // 处理单元格点击事件
+            function handleCellClick(e) {
+                // 获取被点击的单元格
+                const clickedCell = e.target;
+                // 获取单元格索引
+                const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
+
+                // 检查单元格是否已被占用或游戏是否结束
+                if (gameState.board[clickedCellIndex] !== '' || !gameState.gameActive) {
+                    return; // 如果单元格已被占用或游戏结束，直接返回
+                }
+
+                // 在单人模式下，如果当前玩家是电脑，不允许玩家点击
+                if (gameState.isSinglePlayer && gameState.currentPlayer === 'O') {
+                    return;
+                }
+
+                // 更新棋盘状态
+                gameState.board[clickedCellIndex] = gameState.currentPlayer;
+                // 更新单元格显示
+                clickedCell.textContent = gameState.currentPlayer;
+                // 添加对应玩家样式类
+                clickedCell.classList.add(gameState.currentPlayer.toLowerCase());
+
+                // 检查游戏结果
+                const gameEnded = checkGameResult();
+                
+                // 如果游戏没有结束且是单人模式，则电脑立即移动（无延迟）
+                if (!gameEnded && gameState.isSinglePlayer && gameState.gameActive) {
+                    computerMove();
+                }
+            }
+
+            // 电脑移动逻辑
+            function computerMove() {
+                if (!gameState.gameActive) return;
+                
+                // 获取所有空单元格的索引
+                const emptyCells = gameState.board
+                    .map((cell, index) => cell === '' ? index : null)
+                    .filter(index => index !== null);
+                
+                // 如果没有空单元格，直接返回
+                if (emptyCells.length === 0) return;
+                
+                // 简单AI策略：
+                // 1. 首先尝试获胜
+                let move = findWinningMove('O');
+                // 2. 如果没有获胜机会，则阻止玩家获胜
+                if (move === -1) move = findWinningMove('X');
+                // 3. 如果都没有，则随机选择一个空单元格
+                if (move === -1) {
+                    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                    move = emptyCells[randomIndex];
+                }
+                
+                // 执行电脑移动
+                gameState.board[move] = 'O';
+                cells[move].textContent = 'O';
+                cells[move].classList.add('o');
+                
+                // 检查游戏结果
+                checkGameResult();
+            }
+            
+            // 寻找获胜机会或阻止对手获胜
+            function findWinningMove(player) {
+                for (let i = 0; i < winningConditions.length; i++) {
+                    const [a, b, c] = winningConditions[i];
+                    const cells = [gameState.board[a], gameState.board[b], gameState.board[c]];
+                    
+                    // 统计当前玩家在该线上的棋子数和空位
+                    const playerCount = cells.filter(cell => cell === player).length;
+                    const emptyCount = cells.filter(cell => cell === '').length;
+                    
+                    // 如果该线上有两个当前玩家的棋子且有一个空位，则返回空位索引
+                    if (playerCount === 2 && emptyCount === 1) {
+                        if (gameState.board[a] === '') return a;
+                        if (gameState.board[b] === '') return b;
+                        if (gameState.board[c] === '') return c;
+                    }
+                }
+                return -1; // 没有找到获胜机会
+            }
+
+            // 检查游戏结果
+            function checkGameResult() {
+                let roundWon = false; // 本轮是否获胜
+                let winningCells = []; // 获胜单元格索引数组
+
+                // 遍历所有获胜条件
+                for (let i = 0; i < winningConditions.length; i++) {
+                    const [a, b, c] = winningConditions[i]; // 解构获胜条件
+                    // 检查是否满足获胜条件
+                    if (
+                        gameState.board[a] !== '' &&
+                        gameState.board[a] === gameState.board[b] &&
+                        gameState.board[a] === gameState.board[c]
+                    ) {
+                        roundWon = true; // 设置获胜标志
+                        winningCells = [a, b, c]; // 保存获胜单元格索引
+                        break; // 跳出循环
+                    }
+                }
+
+                // 处理获胜情况
+                if (roundWon) {
+                    gameState.gameActive = false; // 游戏结束
+                    gameState.score[gameState.currentPlayer]++; // 增加获胜玩家分数
+                    updateScoreDisplay(); // 更新分数显示
+                    
+                    // 高亮显示获胜的单元格
+                    winningCells.forEach(index => {
+                        cells[index].classList.add('winning-cell');
+                    });
+                    
+                    // 显示获胜消息
+                    const winnerName = gameState.isSinglePlayer && gameState.currentPlayer === 'O' ? '电脑' : `玩家 ${gameState.currentPlayer}`;
+                    showGameResult(`${gameState.currentPlayer} 获胜!`, `${winnerName} 赢得了这一轮!`);
+                    return true; // 返回true表示游戏结束
+                }
+
+                // 检查平局
+                const roundDraw = !gameState.board.includes(''); // 检查棋盘是否已满
+                if (roundDraw) {
+                    gameState.gameActive = false; // 游戏结束
+                    showGameResult('平局!', '这一轮是平局!'); // 显示平局消息
+                    return true; // 返回true表示游戏结束
+                }
+
+                // 切换玩家
+                gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
+                // 更新当前玩家显示
+                currentPlayerElement.textContent = gameState.currentPlayer;
+                return false; // 返回false表示游戏继续
+            }
+
+            // 更新分数显示
+            function updateScoreDisplay() {
+                scoreXElement.textContent = gameState.score.X; // 更新X玩家分数显示
+                scoreOElement.textContent = gameState.score.O; // 更新O玩家分数显示
+            }
+
+            // 显示游戏结果
+            function showGameResult(title, message) {
+                modalTitle.textContent = title; // 设置模态框标题
+                modalMessage.textContent = message; // 设置模态框消息
+                gameResultModal.style.display = 'flex'; // 显示模态框
+            }
+
+            // 切换游戏模式
+            function switchGameMode(isSinglePlayer) {
+                gameState.isSinglePlayer = isSinglePlayer;
+                
+                // 更新按钮状态
+                if (isSinglePlayer) {
+                    singlePlayerModeBtn.classList.add('active');
+                    twoPlayerModeBtn.classList.remove('active');
+                } else {
+                    twoPlayerModeBtn.classList.add('active');
+                    singlePlayerModeBtn.classList.remove('active');
+                }
+                
+                // 重置游戏
+                initGame();
+            }
+
+            // 事件监听器设置
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick); // 为每个单元格添加点击事件
+            });
+
+            // 重新开始按钮点击事件
+            restartButton.addEventListener('click', initGame);
+
+            // 重置分数按钮点击事件
+            resetScoreButton.addEventListener('click', () => {
+                gameState.score.X = 0; // 重置X玩家分数
+                gameState.score.O = 0; // 重置O玩家分数
+                updateScoreDisplay(); // 更新分数显示
+                initGame(); // 初始化游戏
+            });
+
+            // 模态框按钮点击事件
+            modalButton.addEventListener('click', () => {
+                gameResultModal.style.display = 'none'; // 隐藏模态框
+                initGame(); // 初始化游戏
+            });
+
+            // 双人模式按钮点击事件
+            twoPlayerModeBtn.addEventListener('click', () => {
+                switchGameMode(false); // 切换到双人模式
+            });
+
+            // 单人模式按钮点击事件
+            singlePlayerModeBtn.addEventListener('click', () => {
+                switchGameMode(true); // 切换到单人模式
+            });
+
+            // 初始化游戏
+            initGame();
+        });
+    </script>
+</body>
+</html>
