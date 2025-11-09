@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>俄罗斯方块</title>
+    <title>现代俄罗斯方块</title>
     <style>
         /* CSS变量定义 - 深色主题色彩方案 */
         :root {
@@ -34,6 +34,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            overflow-x: hidden;
         }
 
         /* 主容器 */
@@ -54,6 +55,11 @@
         }
 
         /* 游戏画布容器 */
+        .game-board-container {
+            position: relative;
+        }
+
+        /* 游戏画布 */
         .game-board {
             background-color: var(--bg-secondary);
             border: 2px solid var(--border-color);
@@ -190,6 +196,44 @@
             max-width: 600px;
         }
 
+        /* 移动设备控制按钮区域 */
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* 移动控制按钮 */
+        .mobile-btn {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* 移动控制按钮按下效果 */
+        .mobile-btn:active {
+            background-color: var(--accent-color);
+            transform: scale(0.95);
+        }
+
+        /* 宽按钮样式 */
+        .mobile-btn.wide {
+            grid-column: span 2;
+        }
+
         /* 方块颜色定义 */
         .cell-I { background-color: #00bcd4; }
         .cell-O { background-color: #ffeb3b; }
@@ -214,10 +258,20 @@
             .instructions {
                 font-size: 0.9rem;
             }
+
+            /* 调整游戏画布大小 */
+            .game-board {
+                width: 300px;
+                height: 600px;
+            }
         }
 
         /* 响应式设计 - 手机和小屏幕 */
         @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
             .side-panel {
                 padding: 15px;
             }
@@ -225,6 +279,34 @@
             .btn {
                 padding: 8px 12px;
                 font-size: 0.9rem;
+            }
+
+            /* 调整游戏画布大小 */
+            .game-board {
+                width: 250px;
+                height: 500px;
+            }
+
+            /* 显示移动控制按钮 */
+            .mobile-controls {
+                display: grid;
+            }
+        }
+
+        /* 超小屏幕设备 */
+        @media (max-width: 360px) {
+            .game-board {
+                width: 220px;
+                height: 440px;
+            }
+
+            .mobile-controls {
+                gap: 8px;
+            }
+
+            .mobile-btn {
+                padding: 12px 8px;
+                font-size: 1rem;
             }
         }
     </style>
@@ -280,6 +362,15 @@
                 <button id="reset-btn" class="btn">重置游戏</button>
             </div>
         </div>
+    </div>
+
+    <!-- 移动设备控制按钮 -->
+    <div class="mobile-controls">
+        <button class="mobile-btn" id="mobile-left">←</button>
+        <button class="mobile-btn" id="mobile-rotate">↻</button>
+        <button class="mobile-btn" id="mobile-right">→</button>
+        <button class="mobile-btn" id="mobile-down">↓</button>
+        <button class="mobile-btn wide" id="mobile-drop">↓ 落底</button>
     </div>
     
     <!-- 游戏说明 -->
@@ -390,8 +481,64 @@
             document.getElementById('reset-btn').addEventListener('click', resetGame);
             document.getElementById('restart-btn').addEventListener('click', resetGame);
             
+            // 设置移动设备控制按钮事件
+            setupMobileControls();
+            
             // 绘制初始状态
             draw();
+        }
+
+        // 设置移动设备控制按钮
+        function setupMobileControls() {
+            // 左移按钮
+            document.getElementById('mobile-left').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameOver && !isPaused) {
+                    if (!collision(-1, 0, currentPiece)) {
+                        currentPiece.x--;
+                        draw();
+                    }
+                }
+            });
+
+            // 右移按钮
+            document.getElementById('mobile-right').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameOver && !isPaused) {
+                    if (!collision(1, 0, currentPiece)) {
+                        currentPiece.x++;
+                        draw();
+                    }
+                }
+            });
+
+            // 旋转按钮
+            document.getElementById('mobile-rotate').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameOver && !isPaused) {
+                    rotatePiece();
+                    draw();
+                }
+            });
+
+            // 加速下落按钮
+            document.getElementById('mobile-down').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameOver && !isPaused) {
+                    dropPiece();
+                    dropStart = Date.now();
+                    draw();
+                }
+            });
+
+            // 直接落底按钮
+            document.getElementById('mobile-drop').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameOver && !isPaused) {
+                    hardDrop();
+                    draw();
+                }
+            });
         }
 
         // 创建游戏板
